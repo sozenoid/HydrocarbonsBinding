@@ -1,0 +1,58 @@
+# packages in environment at /home/macenrola/anaconda2/envs/my-rdkit-env:
+#
+# Name                    Version                   Build  Channel
+backports.functools-lru-cache 1.5                       <pip>
+boost                     1.63.0           py27hd84f722_1    rdkit
+bzip2                     1.0.6                h9a117a8_4  
+ca-certificates           2017.08.26           h1d4fec5_0  
+cairo                     1.14.12              h77bcde2_0  
+certifi                   2018.1.18                py27_0  
+cycler                    0.10.0                    <pip>
+eigen                     3.2.1                         0    patrickfuller
+fontconfig                2.12.4               h88586e7_1  
+freetype                  2.8                  hab7d2ae_1  
+glib                      2.53.6               h5d9569c_2  
+icu                       58.2                 h9c2bf20_1  
+intel-openmp              2018.0.0             hc7b2577_8  
+jpeg                      9b                   h024ee3a_2  
+libedit                   3.1                  heed3624_0  
+libffi                    3.2.1                hd88cf55_4  
+libgcc                    7.2.0                h69d50b8_2  
+libgcc-ng                 7.2.0                h7cc24e2_2  
+libgfortran-ng            7.2.0                h9f7466a_2  
+libpng                    1.6.34               hb9fc6fc_0  
+libstdcxx-ng              7.2.0                h7a57d05_2  
+libtiff                   4.0.9                h28f6b97_0  
+libxcb                    1.12                 hcd93eb1_4  
+libxml2                   2.9.7                h26e45fe_0  
+matplotlib                2.1.2                     <pip>
+mkl                       2018.0.1             h19d6760_4  
+ncurses                   6.0                           0    rdkit
+numpy                     1.14.0           py27h3dfced4_1  
+olefile                   0.45.1                   py27_0  
+openbabel                 2.4.1                    py27_3    openbabel
+openssl                   1.0.2n               hb7f436b_0  
+pandas                    0.22.0           py27hf484d3e_0  
+pcre                      8.41                 hc27e229_1  
+pillow                    5.0.0            py27h3deb7b8_0  
+pip                       9.0.1            py27ha730c48_4  
+pip                       10.0.1                    <pip>
+pixman                    0.34.0               hceecf20_3  
+pybind11                  2.2.2                     <pip>
+pyparsing                 2.2.0                     <pip>
+python                    2.7.14              h1571d57_29  
+python-dateutil           2.6.1            py27h4ca5741_1  
+pytz                      2017.3           py27h001bace_0  
+rdkit                     2017.09.3.0              py27_1    rdkit
+readline                  7.0                  ha6073c6_4  
+scikit-learn              0.19.1                    <pip>
+scipy                     1.0.0                     <pip>
+seaborn                   0.8.1                     <pip>
+setuptools                38.4.0                   py27_0  
+six                       1.11.0           py27h5f960f1_1  
+sqlite                    3.22.0               h1bed415_0  
+subprocess32              3.2.7                     <pip>
+tk                        8.6.7                hc745277_3  
+wheel                     0.30.0           py27h2bc6bb2_1  
+xz                        5.2.3                h55aa19d_2  
+zlib                      1.2.11               ha838bed_2  
