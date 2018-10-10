@@ -5,6 +5,10 @@ The code mostly serves as a binding between AutoDock Vina, the RDKIT, Open Babel
 Hugues Lambert
 
 # Convert from SDF to PDB then PDBQT
+Using Open Babel convert the SDFs to PDBQT
 
 ```for f in *GUEST*sdf; do obabel $f -O $f.pdbqt; echo $f; done```
+
+
+Then using Autodock Vina do the docking 
 ```for f in ALL_RIGID/*.pdbqt; do ./bin/vina --config noligconf.txt --ligand=$f --out=$f-ALL.pdbqt > $f-report-vina; done```
