@@ -11,4 +11,10 @@ Using Open Babel convert the SDFs to PDBQT
 
 
 Then using Autodock Vina do the docking 
+
 ```for f in ALL_RIGID/*.pdbqt; do ./bin/vina --config noligconf.txt --ligand=$f --out=$f-ALL.pdbqt > $f-report-vina; done```
+
+
+Revert it to sdf file for rdkit handling
+
+```for f in *ALL.pdbqt; do obabel $f -O $f.sdf; done```
