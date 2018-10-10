@@ -1,0 +1,3 @@
+This repository is meant to hold the codes used to process hydrocarbon molecules while their binding affinity with CB[7] is assessed.
+The code mostly serves as a binding between AutoDock Vina, the RDKIT, Open Babel and native python libraries. 
+Hugues Lambert
