@@ -709,14 +709,15 @@ if __name__ == "__main__":
 	import glob
 	from subprocess import call
 	# make_job_kinetic_barrier()
-	get_transition('/home/macenrola/Desktop/MD_trajectories/DFT/C2H4/rmstraj38.dat')
+	# get_transition('/home/macenrola/Desktop/MD_trajectories/DFT/C2H4/rmstraj38.dat')
+	make_topology('/home/macenrola/Thesis/ScreeningManuscriptFinalData/HydrocarbonsBindingPython/CB_candidate_data/CB_candidate.pdb')
 	# create_pdb_and_topology_from_sdf('/home/macenrola/Thesis/hydrocarbons/CB_REFERENCE_VALUES/CB_candidate.sdf', ('CB7', 'haha'))
 	# get_frequency_report('/home/macenrola/Thesis/hydrocarbons/CB_REFERENCE_VALUES/CB_candidate.pdb', '/home/macenrola/Thesis/hydrocarbons/CB_REFERENCE_VALUES/CB_candidate.prmtop')
 	# print return_entropy_from_frequency_report('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/test/xaf_OUT_COMPLEX0frequency_report')
 	# get_frequency_report('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/test/CB_candidate.pdb', '/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/test/CB_candidate.prmtop')
 	# create_pdb_and_topology_from_sdf('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/test/CB_candidate.sdf')
 	# get_frequency_report('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/butina/xaf_OUT.sdf_SAMPLE-SDF2PDB.pdb', '/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/butina/xaf_OUT.sdf_SAMPLE-SDF2PDB.prmtop')
-	# minimize_molecule('/home/macenrola/Dropbox/Vibrations/CYCLODEXTRINE/CYCLODEXTRIN_VIBRATIONS/beta-cd_aligned_e_contrib.sdf')
+	# minimize_molecule('/home/macenrola/Dropbox/Vibrations/CYCLODEXTRIEN/CYCLODEXTRIN_VIBRATIONS/beta-cd_aligned_e_contrib.sdf')
 	# flist = glob.glob('/home/macenrola/Thesis/VIBRATIONS/test_vibrations/FOUR_BENZENE/*.sdf')
 	# print flist
 	# # ['/home/macenrola/Dropbox/Vibrations/CYCLODEXTRINE/200confs/BEST_CONF_STUDY_CD/241-best-complex.sdf', '/home/macenrola/Dropbox/Vibrations/CYCLODEXTRINE/200confs/BEST_CONF_STUDY_CD/5054-best-complex.sdf', '/home/macenrola/Dropbox/Vibrations/CYCLODEXTRINE/200confs/BEST_CONF_STUDY_CD/4409-best-conf.sdf', '/home/macenrola/Dropbox/Vibrations/CYCLODEXTRINE/200confs/BEST_CONF_STUDY_CD/156391-best-complex.sdf', '/home/macenrola/Dropbox/Vibrations/CYCLODEXTRINE/200confs/BEST_CONF_STUDY_CD/4409-best-complex.sdf', '/home/macenrola/Dropbox/Vibrations/CYCLODEXTRINE/200confs/BEST_CONF_STUDY_CD/241-best-conf.sdf', '/home/macenrola/Dropbox/Vibrations/CYCLODEXTRINE/200confs/BEST_CONF_STUDY_CD/5054-best-conf.sdf', '/home/macenrola/Dropbox/Vibrations/CYCLODEXTRINE/200confs/BEST_CONF_STUDY_CD/3394-best-complex.sdf', '/home/macenrola/Dropbox/Vibrations/CYCLODEXTRINE/200confs/BEST_CONF_STUDY_CD/3394-best-conf.sdf', '/home/macenrola/Dropbox/Vibrations/CYCLODEXTRINE/200confs/BEST_CONF_STUDY_CD/156391-best-conf.sdf']
