@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 import numpy as np
 from subprocess import call
 from SmallestEnclosingCircle_CASTING import returnCircleAsTuple
-from miniball_example_containers import doit
+# from miniball_example_containers import doit
 
 def get_atoms_coords(RDKIT_BLOCK):
 	"""Takes as input an RDKIT BLOCK and returns a list of atoms with a numpy array containing the coordinates"""
@@ -365,7 +365,7 @@ def create_pdb_and_topology_from_sdf(fin, resName = ('GST', 'HST'), resNumber = 
 		convert_sdf_to_pdb(fin, residueName=resName, residueNumber=resNumber, fout=fout)
 		make_topology(fout)
 
-def make_topology(guestPDB, hostPDB = '', compPDB = '', tleapexecpath='/home/macenrola/Thesis/AMBER/amber16/bin/'):  
+def make_topology(guestPDB, hostPDB = '', compPDB = '', tleapexecpath='/home/macenrola/Documents/Thesis/amber16/bin/'):
 	"""
 	PRE  : If a guest, just takes in a pdb file, if a complex, takes three corresponding to the guest, host and complex. The complex would have no connect records while the guest and host pdb would have some 
 		   If this method is used as a chain DON't forget to run the .sh scripts of the host guest subfiles from the complex before running the code to get the final complex prmtop. Alternatively, run everything TWICE or more haha
@@ -416,7 +416,7 @@ def make_topology(guestPDB, hostPDB = '', compPDB = '', tleapexecpath='/home/mac
 
 
 		call('chmod +x {}'.format(fout1), shell=True)
-		call('{}'.format(fout1),shell=True)
+		# call('{}'.format(fout1),shell=True)
 
 
 	def make_topology_mol_combination(guestPDB, hostPDB, compPDB, tleapexecpath):
@@ -463,7 +463,7 @@ def make_topology(guestPDB, hostPDB = '', compPDB = '', tleapexecpath='/home/mac
 			w.writelines(script_tleap)
 
 		call('chmod +x {}'.format(fout1), shell=True)
-		call('{}'.format(fout1),shell=True)
+		# call('{}'.format(fout1),shell=True)
 
 	if not isComplex:
 		make_topology_one_mol(tleapexecpath, guestPDB)
@@ -704,13 +704,60 @@ def get_transition(onedatfile):
 					break
 
 
+def make_topology_for_pattern(f):
+	"""
+	:param pattern: Takes in a pattern such as  /home/macenrola/Desktop/*guestsPose0.pdb' designed to match one conformation for guests of the form /home/macenrola/Desktop/1140xah_OUT_GUEST117_guestsPose0.pdb'
+	:return: The amber topology files for /home/macenrola/Desktop/1140xah_OUT_GUEST117_guestsPose0.pdb' and /home/macenrola/Desktop/1140xah_OUT_GUEST117_complexPose0.pdb using multiprocessing
+	"""
+	# flist = glob.glob(pattern)
+	# for f in flist:
+	hostpdb = '/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/HydrocarbonsBindingPython/CB_candidate_data/CB_candidate_formatted.pdb'
+	guest, comp = f, f[:-15] + 'complexPose0.pdb'
+	print guest
+	print comp
+	make_topology(guest)
+	make_topology(guest,hostpdb, comp)
+
+def make_parralel_script(listofscripts):
+	"""
+	:param listPattern: a pattern for a list of scripts such as /home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/Generation3Ddata/PDBs_and_docked/*guestsPose0-run_tops.sh
+	matching /home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/Generation3Ddata/PDBs_and_docked/241xaa_OUT_GUEST158_guestsPose0-run_tops.sh
+	:return: a single script to run them all in parallel
+	"""
+	with open('/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/Generation3Ddata/PDBs_and_docked/parallel_complex_script.sh', 'wb') as w:
+		for i,f in enumerate(listofscripts):
+			w.write(f+' \& \n')
+			if i % 16 == 0:
+				w.write('wait\n')
 
 if __name__ == "__main__":
 	import glob
 	from subprocess import call
+	from multiprocessing import Pool, TimeoutError
+	import time
+	import os
 	# make_job_kinetic_barrier()
+
+
+	make_parralel_script(glob.glob('/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/Generation3Ddata/PDBs_and_docked/*complexPose0-run_tops.sh'))
+
+	# flist = glob.glob('/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/Generation3Ddata/PDBs_and_docked/*guestsPose0.pdb')
+	# errfile='/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/Generation3Ddata/errfile_generate_sh'
+	# with open(errfile, 'wb') as w: pass
+	# for f in flist:
+	# 	try:
+	# 		make_topology_for_pattern(f)
+	# 	except:
+	# 		with open(errfile, 'ab') as a:
+	# 			a.write(f+'\n')
+
+
+
+
 	# get_transition('/home/macenrola/Desktop/MD_trajectories/DFT/C2H4/rmstraj38.dat')
-	make_topology('/home/macenrola/Thesis/ScreeningManuscriptFinalData/HydrocarbonsBindingPython/CB_candidate_data/CB_candidate.pdb')
+	# make_topology('/home/macenrola/Desktop/1140xah_OUT_GUEST117_guestsPose0.pdb')
+	# make_topology('/home/macenrola/Desktop/1140xah_OUT_GUEST117_guestsPose0.pdb', '/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/HydrocarbonsBindingPython/CB_candidate_data/CB_candidate_formatted.pdb',
+	# 			  '/home/macenrola/Desktop/1140xah_OUT_GUEST117_complexPose0.pdb')
 	# create_pdb_and_topology_from_sdf('/home/macenrola/Thesis/hydrocarbons/CB_REFERENCE_VALUES/CB_candidate.sdf', ('CB7', 'haha'))
 	# get_frequency_report('/home/macenrola/Thesis/hydrocarbons/CB_REFERENCE_VALUES/CB_candidate.pdb', '/home/macenrola/Thesis/hydrocarbons/CB_REFERENCE_VALUES/CB_candidate.prmtop')
 	# print return_entropy_from_frequency_report('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/test/xaf_OUT_COMPLEX0frequency_report')
