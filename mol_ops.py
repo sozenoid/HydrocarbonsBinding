@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 import numpy as np
 from subprocess import call
 from SmallestEnclosingCircle_CASTING import returnCircleAsTuple
-# from miniball_example_containers import doit
+from miniball_example_containers import doit
 
 def get_atoms_coords(RDKIT_BLOCK):
 	"""Takes as input an RDKIT BLOCK and returns a list of atoms with a numpy array containing the coordinates"""
@@ -17,9 +17,9 @@ def get_atoms_coords(RDKIT_BLOCK):
 	atm_list = []
 	coords_array = np.zeros([atm_number, 3], dtype=float)
 	for i, line in enumerate(RDKIT_BLOCK[4:4+atm_number]):
-	    coords_atm = line
-	    atm_list.append(coords_atm[3])
-	    coords_array[i, :] = coords_atm[:3]
+		coords_atm = line
+		atm_list.append(coords_atm[3])
+		coords_array[i, :] = coords_atm[:3]
 	return atm_list, coords_array
 
 
@@ -99,7 +99,7 @@ def align_mol(RDKIT_BLOCK):
 		miniball_data[-1] = miniball_data[-1]**.5
 		return miniball_data[-1]
 
-
+	print RDKIT_BLOCK
 	atom_coords = get_atoms_coords(RDKIT_BLOCK)
 	transformed_coords, xthick, ythick, zthick, rad = align_xyz(atom_coords[0], atom_coords[1])
 	sphere_radius = set_miniball_data(atom_coords[0], atom_coords[1])
@@ -218,7 +218,7 @@ def make_pdb_complex_with_named_residues(RDKIT_BLOCK_GUEST, pdb_file_guest, pdb_
 	fix_PDB_spacing(pdb_file_complex)
 	print 'COMP is DONE'
 
-def get_binding_energy_withCB7(smiles):
+def get_binding_energy_withCB7(smiles, name):
 	"""
 	:param smifile: takes in a smiles and return
 	:return:
@@ -237,13 +237,17 @@ def get_binding_energy_withCB7(smiles):
 
 	mol = Chem.MolFromSmiles(smiles)
 	mol = Chem.AddHs(mol)
-	mol = Chem.MolFromMolBlock(align_mol(Chem.MolToMolBlock(mol)[0]), removeHs = False)
+	# mol.SetProp("_Name", name)
+	AllChem.EmbedMolecule(mol)
+	AllChem.MMFFOptimizeMolecule(mol)
+	# print Chem.MolToMolBlock(mol)
+	mol = Chem.MolFromMolBlock(align_mol(Chem.MolToMolBlock(mol))[0], removeHs = False)
 	converged_mol, mol_E = converge(mol)
 	complex_with_CB = Chem.CombineMols(mol, Chem.MolFromMolBlock(get_CB_BLOCK(), removeHs=False))
 	Chem.GetSSSR(complex_with_CB)
 	converged_comp, complex_E = converge(complex_with_CB)
-	Chem.MolToMolFile(mol, sdfile+'_MOL.sdf')
-	Chem.MolToMolFile(complex_with_CB, sdfile+'_COMPLEX.sdf')
+	Chem.MolToMolFile(mol, name+'_MOL.sdf')
+	Chem.MolToMolFile(complex_with_CB, name+'_COMPLEX.sdf')
 	print 'MMFF94 BINDING ENERGY is {0:.4f} (GUEST_ENERGY:{3}, converged=={1}; COMPLEX_ENERGY:{4}, COMPLEX_CONVERGE=={2})'.format(complex_E-mol_E-(-1451.415064), converged_mol==0, converged_comp==0, mol_E, complex_E)
 
 def assign_features(rdkitmol):
@@ -746,9 +750,9 @@ if __name__ == "__main__":
 	import time
 	import os
 	# make_job_kinetic_barrier()
-
-	print get_frequency_report('/home/macenrola/Desktop/931xae_OUT_GUEST15_complexPose0.pdb',
-						 '/home/macenrola/Desktop/241xaa_OUT_GUEST158_complexPose0.prmtop')
+	#
+	# print get_frequency_report('/home/macenrola/Desktop/931xae_OUT_GUEST15_complexPose0.pdb',
+	# 					 '/home/macenrola/Desktop/241xaa_OUT_GUEST158_complexPose0.prmtop')
 	# make_parralel_script(glob.glob('/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/Generation3Ddata/PDBs_and_docked/*complexPose0-run_tops.sh'))
 
 	# flist = glob.glob('/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/Generation3Ddata/PDBs_and_docked/*guestsPose0.pdb')
@@ -761,6 +765,11 @@ if __name__ == "__main__":
 	# 		with open(errfile, 'ab') as a:
 	# 			a.write(f+'\n')
 
+	with open('/home/macenrola/Documents/vasp/xylene/xyleneSmiles', 'rb') as r:
+		for line in r:
+			name, smi = line.strip().split('\t')
+			print name, smi
+			get_binding_energy_withCB7(smi,  "/home/macenrola/Documents/vasp/xylene/{}".format(name))
 
 
 
