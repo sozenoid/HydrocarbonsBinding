@@ -218,9 +218,10 @@ def make_pdb_complex_with_named_residues(RDKIT_BLOCK_GUEST, pdb_file_guest, pdb_
 	fix_PDB_spacing(pdb_file_complex)
 	print 'COMP is DONE'
 
-def get_binding_energy_withCB7(sdfile):
+def get_binding_energy_withCB7(smiles):
 	"""
-	Takes a valid SDF file in input and returns its binding enregy with CB7
+	:param smifile: takes in a smiles and return
+	:return:
 	"""
 	def converge(mol, n_steps = 100000, tol=1e-9):
 		"""Converges all of the molecule built-in conformations using n_threads"""
@@ -234,7 +235,8 @@ def get_binding_energy_withCB7(sdfile):
 			converged.append((cf, ff.CalcEnergy()))
 		return sum([x[0] for x in converged]), ff.CalcEnergy()
 
-	mol = Chem.MolFromMolFile(sdfile, removeHs=False)
+	mol = Chem.MolFromSmiles(smiles)
+	mol = Chem.AddHs(mol)
 	mol = Chem.MolFromMolBlock(align_mol(Chem.MolToMolBlock(mol)[0]), removeHs = False)
 	converged_mol, mol_E = converge(mol)
 	complex_with_CB = Chem.CombineMols(mol, Chem.MolFromMolBlock(get_CB_BLOCK(), removeHs=False))
