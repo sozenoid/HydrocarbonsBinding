@@ -38,7 +38,7 @@ def create_G09(title, xyz, path):
 	'%Chk={0}.chk',
 	'%NProcShared=12',
 	'%mem=2gb',
-	'#n wB97XD/6-31G* Opt=Tight Int=Ultrafine SCF=QC',
+	'#P wB97XD/6-31G*',
 	# '%rwf=DNT_wB97XD_6-31Gd_Raman.rwf',
 	# '%NoSave',
 	# '%Chk=DNT_wB97XD_6-31Gd_Raman.chk',
@@ -47,18 +47,18 @@ def create_G09(title, xyz, path):
 	# '#n wB97XD/6-31G* Opt Freq=Raman',
 	# #n HF/6-31G* Opt Freq=Raman
 	# '# Opt=Restart',
- 	'',
- 	'{0}',
- 	'',
- 	'0 1',
- 	'{1}'
- 	'\n',
- 	'\n'
- 	# '{0}.wfn',
- 	# '\n'
- 	]
- 	g09_backbone = '\n'.join(g09_backbone).format(title, '\n'.join(xyz))
- 	with open(path+'/{}_wB97XD_631Gd.com'.format(title), 'wb') as w:
+	'',
+	'{0}',
+	'',
+	'0 1',
+	'{1}'
+	'\n',
+	'\n'
+	# '{0}.wfn',
+	# '\n'
+	]
+	g09_backbone = '\n'.join(g09_backbone).format(title, '\n'.join(xyz))
+	with open(path+'/{}_wB97XD_631Gd.com'.format(title), 'wb') as w:
 		w.write(g09_backbone)
 
 def parse_xyz(fname):
@@ -131,7 +131,7 @@ def make_gaussian_arrayjob(arrayjobfilename):
 	paramfile = 'paramfile'
 	paramfilelist = glob.glob(prefix+'*com')
 	paramfilelist = [x.split('/')[-1] for x in paramfilelist]
-	script_name = 'adamantanelike.sh'
+	script_name = 'xylene.sh'
 	canon_string = [
 	"#!/bin/bash -l",
 	"#$ -S /bin/bash",
@@ -184,4 +184,4 @@ if __name__ == '__main__':
 	# parse_xyz('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/20first/mypart10-20/all_firstamber.xyz')
 	# get_errors_or_unprocessed('/home/macenrola/Thesis/XAA_INCLUSION_EXCLUSION/')
 	# keep_only_low_E_from_SDF('/home/macenrola/Thesis/openbabel_for_failed_rdkit/sample_complex.sdf')
-	make_gaussian_arrayjob('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/adamantane/adamantanelike.xyz')
+	make_gaussian_arrayjob('/home/macenrola/Documents/vasp/xylene/xylene.xyz')

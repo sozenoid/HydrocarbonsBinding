@@ -237,7 +237,7 @@ def get_binding_energy_withCB7(smiles, name):
 
 	mol = Chem.MolFromSmiles(smiles)
 	mol = Chem.AddHs(mol)
-	# mol.SetProp("_Name", name)
+	mol.SetProp("_Name", name.split('/')[-1]+'_guest')
 	AllChem.EmbedMolecule(mol)
 	AllChem.MMFFOptimizeMolecule(mol)
 	# print Chem.MolToMolBlock(mol)
@@ -246,6 +246,7 @@ def get_binding_energy_withCB7(smiles, name):
 	complex_with_CB = Chem.CombineMols(mol, Chem.MolFromMolBlock(get_CB_BLOCK(), removeHs=False))
 	Chem.GetSSSR(complex_with_CB)
 	converged_comp, complex_E = converge(complex_with_CB)
+	complex_with_CB.SetProp("_Name", name.split('/')[-1]+'_complex')
 	Chem.MolToMolFile(mol, name+'_MOL.sdf')
 	Chem.MolToMolFile(complex_with_CB, name+'_COMPLEX.sdf')
 	print 'MMFF94 BINDING ENERGY is {0:.4f} (GUEST_ENERGY:{3}, converged=={1}; COMPLEX_ENERGY:{4}, COMPLEX_CONVERGE=={2})'.format(complex_E-mol_E-(-1451.415064), converged_mol==0, converged_comp==0, mol_E, complex_E)
