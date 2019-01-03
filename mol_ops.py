@@ -231,7 +231,7 @@ def make_pdb_complex_with_named_residues(RDKIT_BLOCK_GUEST, pdb_file_guest, pdb_
 	fix_PDB_spacing(pdb_file_complex)
 	print 'COMP is DONE'
 
-def get_binding_energy_withCB7(smiles, name):
+def get_binding_energy_withCB(smiles, name, CBblock):
 	"""
 	:param smifile: takes in a smiles and return
 	:return:
@@ -256,13 +256,15 @@ def get_binding_energy_withCB7(smiles, name):
 	# print Chem.MolToMolBlock(mol)
 	mol = Chem.MolFromMolBlock(align_mol(Chem.MolToMolBlock(mol))[0], removeHs = False)
 	converged_mol, mol_E = converge(mol)
-	complex_with_CB = Chem.CombineMols(mol, Chem.MolFromMolBlock(get_CB_BLOCK(), removeHs=False))
+	complex_with_CB = Chem.CombineMols(mol, Chem.MolFromMolBlock(CBblock, removeHs=False))
 	Chem.GetSSSR(complex_with_CB)
-	converged_comp, complex_E = converge(complex_with_CB)
+	# converged_comp, complex_E = converge(complex_with_CB)
 	complex_with_CB.SetProp("_Name", name.split('/')[-1]+'_complex')
 	Chem.MolToMolFile(mol, name+'_MOL.sdf')
 	Chem.MolToMolFile(complex_with_CB, name+'_COMPLEX.sdf')
-	print 'MMFF94 BINDING ENERGY is {0:.4f} (GUEST_ENERGY:{3}, converged=={1}; COMPLEX_ENERGY:{4}, COMPLEX_CONVERGE=={2})'.format(complex_E-mol_E-(-1451.415064), converged_mol==0, converged_comp==0, mol_E, complex_E)
+	# print 'MMFF94 BINDING ENERGY is {0:.4f} (GUEST_ENERGY:{3}, converged=={1}; COMPLEX_ENERGY:{4}, COMPLEX_CONVERGE=={2})'.format(complex_E-mol_E-(-1451.415064), converged_mol==0, converged_comp==0, mol_E, complex_E)
+
+
 
 def assign_features(rdkitmol):
 	"""
@@ -779,17 +781,21 @@ if __name__ == "__main__":
 	# 		with open(errfile, 'ab') as a:
 	# 			a.write(f+'\n')
 
-	# with open('/home/macenrola/Documents/vasp/xylene/xyleneSmiles', 'rb') as r:
-	# 	for line in r:
-	# 		name, smi = line.strip().split('\t')
-	# 		print name, smi
-	# 		get_binding_energy_withCB7(smi,  "/home/macenrola/Documents/vasp/xylene/{}".format(name))
+	with open('/home/macenrola/Documents/vasp/xylene/xyleneSmiles', 'rb') as r:
+		for line in r:
+			name, smi = line.strip().split('\t')
+			print name, smi
+			get_binding_energy_withCB(smi,  "/home/macenrola/Documents/vasp/xylene/{}".format(name+"_CB7"), get_CB_BLOCK())
+
+	# mol = Chem.MolFromMolBlock(get_CB_BLOCK(), removeHs=False)
+	# Chem.MolToPDBFile(mol, "/home/macenrola/Desktop/cb5.pdb")
+
 #########CB5
-	mol = Chem.MolFromPDBFile('/home/macenrola/Documents/methanol/CB5.pdb', removeHs=False)
-	mol.SetProp('_Name', 'CB5')
-	res = align_mol(Chem.MolToMolBlock(mol))
-	# Chem.MolToPDBFile(Chem.MolFromMolBlock(res[0], removeHs=False), '/home/macenrola/Documents/methanol/CB7_aligned.pdb')
-	print res[0].__repr__()
+	# mol = Chem.MolFromPDBFile('/home/macenrola/Documents/methanol/CB5.pdb', removeHs=False)
+	# mol.SetProp('_Name', 'CB5')
+	# res = align_mol(Chem.MolToMolBlock(mol))
+	# # Chem.MolToPDBFile(Chem.MolFromMolBlock(res[0], removeHs=False), '/home/macenrola/Documents/methanol/CB7_aligned.pdb')
+	# print res[0].__repr__()
 ######### XYLENE PARA
 	# mol = Chem.MolFromSmiles('CC1=CC=C(C=C1)CCCCCC')
 	# mol = Chem.AddHs(mol)

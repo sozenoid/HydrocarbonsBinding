@@ -38,7 +38,7 @@ def create_G09(title, xyz, path):
 	'%Chk={0}.chk',
 	'%NProcShared=12',
 	'%mem=2gb',
-	'#P wB97XD/6-31G*',
+	'#P wB97XD/6-31G* Opt',
 	# '%rwf=DNT_wB97XD_6-31Gd_Raman.rwf',
 	# '%NoSave',
 	# '%Chk=DNT_wB97XD_6-31Gd_Raman.chk',
@@ -50,7 +50,7 @@ def create_G09(title, xyz, path):
 	'',
 	'{0}',
 	'',
-	'0 1',
+	'1 1',
 	'{1}'
 	'\n',
 	'\n'
@@ -58,7 +58,7 @@ def create_G09(title, xyz, path):
 	# '\n'
 	]
 	g09_backbone = '\n'.join(g09_backbone).format(title, '\n'.join(xyz))
-	with open(path+'/{}_wB97XD_631Gd.com'.format(title), 'wb') as w:
+	with open(path+'/{}_wB97XD_631Gd_small_complexes.com'.format(title), 'wb') as w:
 		w.write(g09_backbone)
 
 def parse_xyz(fname):
@@ -128,10 +128,10 @@ def make_gaussian_arrayjob(arrayjobfilename):
 	import glob
 	parse_xyz(arrayjobfilename)
 	prefix = '/'.join(arrayjobfilename.split('/')[:-1])+'/'
-	paramfile = 'paramfile'
+	paramfile = 'paramfile_CBs'
 	paramfilelist = glob.glob(prefix+'*com')
 	paramfilelist = [x.split('/')[-1] for x in paramfilelist]
-	script_name = 'xylene.sh'
+	script_name = 'CBs.sh'
 	canon_string = [
 	"#!/bin/bash -l",
 	"#$ -S /bin/bash",
@@ -184,4 +184,4 @@ if __name__ == '__main__':
 	# parse_xyz('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/20first/mypart10-20/all_firstamber.xyz')
 	# get_errors_or_unprocessed('/home/macenrola/Thesis/XAA_INCLUSION_EXCLUSION/')
 	# keep_only_low_E_from_SDF('/home/macenrola/Thesis/openbabel_for_failed_rdkit/sample_complex.sdf')
-	make_gaussian_arrayjob('/home/macenrola/Documents/vasp/xylene/xylene.xyz')
+	make_gaussian_arrayjob('/home/macenrola/Documents/vasp/xylene/XYLENE_reaction/Protonated.xyz')
