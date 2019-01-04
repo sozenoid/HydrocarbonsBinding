@@ -289,6 +289,7 @@ def number_lines(f):
 		with open(f+'-numbered', 'wb') as w:
 			for i, line in enumerate(r):
 				w.write("{0:05d}\t{1}".format(i, line))
+
 if __name__ == "__main__":
 
 	import rdkit
@@ -308,4 +309,4 @@ if __name__ == "__main__":
 	# number_lines('/home/macenrola/Documents/docked_for_data_analysis/400k-500klist_pdbqt')
 	# addSmi('/home/macenrola/Documents/docked_for_data_analysis/sumdic_with_apolar_breakdown-processedfreeenergy-sorted',
 		   # '/home/macenrola/Documents/docked_for_data_analysis/pubchem_smis')
-	remove_high_bad('/home/macenrola/Documents/docked_for_data_analysis/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi')
+	# remove_high_bad('/home/macenrola/Documents/docked_for_data_analysis/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi')
