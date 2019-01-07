@@ -177,32 +177,36 @@ def treatdic(sumdic_file = "/home/macenrola/Desktop/sumdic_with_apolar"):
 			minEcomplex = 1e8
 			gbestpose = -1
 			cbestpose = -1
-			print k, sumdic[k]
+			# print k, sumdic[k]
 			if sumdic[k] == None: continue
 			# if i==10: break
+
 			for p in sumdic[k]["GUEST"]:
-				breakdown, total = sumdic[k]["GUEST"][p]
-				if breakdown == [] or total == []: continue
+				breakdown, total, vibrational = sumdic[k]["GUEST"][p]
+				if breakdown == [] or total == [] or vibrational == []: continue
 				tempE = breakdown[0] - total[-1]*298.15/1000
+				# tempE = breakdown[0] - total[-1] * 298.15 / 1000
 				# print tempE
 				if tempE<minEguest:
 					minEguest=tempE
 					gbestpose = p
+
 			for p in sumdic[k]["COMPLEX"]:
-				breakdown, total = sumdic[k]["COMPLEX"][p]
-				if breakdown == [] or total == []: continue
-				tempE = breakdown[0] - total[-1]*298.15/1000
+				breakdown, total, vibrational = sumdic[k]["COMPLEX"][p]
+				if breakdown == [] or total == [] or vibrational == []: continue
+				tempE = breakdown[0] - total[-1] * 298.15/1000
+				# tempE = breakdown[0] - total[-1]*298.15/1000
 				# print tempE
 				if tempE<minEcomplex:
 					minEcomplex=tempE
 					cbestpose = p
 
 			# print minEguest, minEcomplex
-			CB_breakdown = [-47.78,    187.19,    -47.83,   -135.56,      3.45,    -55.04, -296.926*298.15/1000]
+			CB_breakdown = [-47.78,    187.19,    -47.83,   -135.56,      3.45,    -55.04, -296.926*298.15/1000] # Standard using ff energy and overall entropy
 			if gbestpose == -1 or cbestpose == -1: continue
-			G_breakdown, G_total = sumdic[k]["GUEST"][gbestpose]
+			G_breakdown, G_total, G_vibrational = sumdic[k]["GUEST"][gbestpose]
 			G_breakdown[-1] = (-G_total[-1]*298.15/1000)
-			C_breakdown, C_total = sumdic[k]["COMPLEX"][cbestpose]
+			C_breakdown, C_total, C_vibrational = sumdic[k]["COMPLEX"][cbestpose]
 			C_breakdown[-1] = (-C_total[-1]*298.15/1000)
 			# print len(CB_breakdown), CB_breakdown
 			# print len(G_breakdown), G_breakdown
@@ -212,7 +216,7 @@ def treatdic(sumdic_file = "/home/macenrola/Desktop/sumdic_with_apolar"):
 			#			freq		E			Cv				S
 			#			cm ** -1	kcal / mol	cal / mol - K	cal / mol - K
 			# Total:                585.346		243.982			296.926
-			w.write("{}\t{}\t{}\t{}\t{}\r\n".format(k, gbestpose, cbestpose, minEcomplex - minEguest - (-47.78-296.926*298.15/1000), '\t'.join(['{:6.3f}'.format(x[0]-x[1]-x[2]) for x in zip(C_breakdown, G_breakdown, CB_breakdown)])))
+			w.write("{}\t{}\t{}\t{}\t{}\r\n".format(k, gbestpose, cbestpose, sum(C_breakdown[1:]) - sum(G_breakdown[1:]) - sum(CB_breakdown[1:]), '\t'.join(['{:6.3f}'.format(x[0]-x[1]-x[2]) for x in zip(C_breakdown, G_breakdown, CB_breakdown)])))
 
 
 def generate_3d(SMIile):
