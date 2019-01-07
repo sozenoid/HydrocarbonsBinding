@@ -60,11 +60,17 @@ def parse_amber_report(fname, indexofff):
 			the total entropy is formatted as:
 			            cm**-1       kcal/mol       cal/mol-K     cal/mol-K
 			Total:                   197.487         31.212         83.509
+			.
+			.
+			.
+			vibrational:             866.574        310.409        289.623
+
 
 			the pubchem number, pose number and type of molecule (guest or complex) is obtained from the file name
 	"""
 	breakdownline = ""
 	total = ""
+	vibrational = ""
 	type = ""
 	posenum = ""
 	number = fname.split('/')[-1].split('x')[0]
@@ -84,10 +90,12 @@ def parse_amber_report(fname, indexofff):
 
 			elif l[:10] == "Total:    ":
 				total = l
+			elif l[:12] == "vibrational:":
+				vibrational = l
 			else:
 				# print l[:10]
 				pass
-	return int(number), type, int(posenum), [float(x) for x in breakdownlines[indexofff].split()[2:]], [float(x) for x in total.split()[1:]]
+	return int(number), type, int(posenum), [float(x) for x in breakdownlines[indexofff].split()[2:]], [float(x) for x in total.split()[1:]], [float(x) for x in vibrational.split()[1:]]
 
 def get_number_from_fname(fname="/home/macenrola/Desktop/12883016xzzabfs_OUT_GUEST17_complexPose0-freq.nab-freqreport"):
 	"""
@@ -109,12 +117,20 @@ def make_summary_dic_of_numbers_and_poses(listoffiles, indexofff=-3):
 			the total entropy is formatted as:
 			            cm**-1       kcal/mol       cal/mol-K     cal/mol-K
 			Total:                   197.487         31.212         83.509
+			for example:
+			241 {'COMPLEX': {0: ([-63.66, 187.38, -64.69, -134.7, 3.42, -55.07, 0.0635], [639.04, 270.186, 344.779], [704.337, 264.229, 256.047]), 1: ([-64.81, 187.45, -65.85, -134.33, 3.43, -55.51, 0.0169], [637.817, 270.212, 345.442], [704.28, 264.254, 256.718]), 2: ([-64.76, 187.48, -65.83, -134.32, 3.42, -55.51, 0.108], [636.687, 266.243, 331.443], [703.094, 260.285, 242.72]), 3: ([-64.82, 187.45, -65.85, -134.33, 3.42, -55.51, 0.0171], [637.817, 270.212, 345.441], [704.28, 264.255, 256.717]), 4: ([-64.82, 187.45, -65.85, -134.33, 3.42, -55.51, 0.0177], [638.411, 272.197, 355.796], [704.874, 266.239, 267.071]), 5: ([nan, nan, nan, nan, 0.0, nan, nan], [nan, nan, nan], [nan, nan, 0.0]), 6: ([-61.52, 187.31, -63.27, -135.3, 3.56, -53.82, 0.0223], [639.863, 266.155, 328.389], [703.159, 260.197, 239.65]), 7: ([101358087626.72, 101358088121.49, -0.09, -6.41, 0.0, -488.27, 374000.0], [], []), 8: ([-61.57, 187.32, -63.32, -135.32, 3.56, -53.8, 0.044], [639.796, 266.159, 328.855], [703.148, 260.202, 240.116])}, 'GUEST': {0: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86], [64.582, 10.542, 4.226]), 1: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86], [64.582, 10.542, 4.226]), 2: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86], [64.582, 10.542, 4.226]), 3: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86], [64.582, 10.542, 4.226]), 4: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86], [64.582, 10.542, 4.226]), 5: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86], [64.582, 10.542, 4.226]), 6: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86], [64.582, 10.542, 4.226]), 7: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86], [64.582, 10.542, 4.226]), 8: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86], [64.582, 10.542, 4.226])}}
+
+
 	"""
 	import cPickle as pk
 	presort = set()
 	for i,f in enumerate(listoffiles):
-		number = get_number_from_fname(f)
-		presort.add(number)
+		try:
+			number = get_number_from_fname(f)
+			presort.add(number)
+		except:
+			print "error with step {}/{}".format(i,f)
+			pass
 		if i%1000==0:
 			print "step {}".format(i)
 	sumdic = dict.fromkeys(presort)
@@ -123,7 +139,7 @@ def make_summary_dic_of_numbers_and_poses(listoffiles, indexofff=-3):
 		if i%1000==0:
 			print "step {}/{}".format(i,f)
 		try:
-			number, type, posenum, breakdown, total = parse_amber_report(f, indexofff)
+			number, type, posenum, breakdown, total, vibrational = parse_amber_report(f, indexofff)
 		except:
 			print "error with step {}/{}".format(i,f)
 			continue
@@ -131,7 +147,7 @@ def make_summary_dic_of_numbers_and_poses(listoffiles, indexofff=-3):
 			sumdic[number] = {}
 		if type not in sumdic[number]:
 			sumdic[number][type] = {}
-		sumdic[number][type][posenum] = (breakdown, total)
+		sumdic[number][type][posenum] = (breakdown, total, vibrational)
 
 	with open("/home/macenrola/Desktop/sumdic_with_apolar", "wb") as handle:
 		pk.dump(sumdic, handle)
@@ -139,10 +155,13 @@ def make_summary_dic_of_numbers_and_poses(listoffiles, indexofff=-3):
 	# with open("/home/macenrola/Desktop/sumdic", "rb") as r:
 	# 	print pk.load(r)
 
-def treatdic(sumdic_file = "/home/macenrola/Desktop/sumdic_with_apolar_breakdown"):
+def treatdic(sumdic_file = "/home/macenrola/Desktop/sumdic_with_apolar"):
 	"""
 
 	:param sumdic_file: takes in a dic formatted as in make_summary_dic_of_numbers_and_poses and produces the binding energies
+	one line looks like this
+	key 241: {'COMPLEX': {0: ([-63.66, 187.38, -64.69, -134.7, 3.42, -55.07, 0.0635], [639.04, 270.186, 344.779]), 1: ([-64.81, 187.45, -65.85, -134.33, 3.43, -55.51, 0.0169], [637.817, 270.212, 345.442]), 2: ([-64.76, 187.48, -65.83, -134.32, 3.42, -55.51, 0.108], [636.687, 266.243, 331.443]), 3: ([-64.82, 187.45, -65.85, -134.33, 3.42, -55.51, 0.0171], [637.817, 270.212, 345.441]), 4: ([-64.82, 187.45, -65.85, -134.33, 3.42, -55.51, 0.0177], [638.411, 272.197, 355.796]), 5: ([nan, nan, nan, nan, 0.0, nan, nan], [nan, nan, nan]), 6: ([-61.52, 187.31, -63.27, -135.3, 3.56, -53.82, 0.0223], [639.863, 266.155, 328.389]), 7: ([101358087626.72, 101358088121.49, -0.09, -6.41, 0.0, -488.27, 374000.0], []), 8: ([-61.57, 187.32, -63.32, -135.32, 3.56, -53.8, 0.044], [639.796, 266.159, 328.855])}, 'GUEST': {0: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86]), 1: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86]), 2: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86]), 3: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86]), 4: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86]), 5: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86]), 6: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86]), 7: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86]), 8: ([4.02, 0.13, 3.14, 0.54, 1.05, -0.85, 0.016], [69.324, 16.499, 68.86])}}
+
 	:return: a file with the binding energies
 	"""
 	import cPickle
@@ -151,6 +170,8 @@ def treatdic(sumdic_file = "/home/macenrola/Desktop/sumdic_with_apolar_breakdown
 		sumdic = cPickle.load(r)
 	with open(outfile, "wb") as w:
 		for i, k in enumerate(sorted(sumdic)[:]):
+			# print k, sumdic[k]
+			# return
 			if i%1000==0: print "step {}".format(i)
 			minEguest = 1e8
 			minEcomplex = 1e8
@@ -261,24 +282,24 @@ def addSmi(basefile, pubsmi):
 				w.write(line.strip()+'\t{}\n'.format(smidic[pbnbr]))
 
 
-def remove_high_bad(basefile):
-	"""
-	:param basefile: takes in a file formatted as
-	91413520	0	2	-44.6241473	-51.320	-18.690	-34.560	-0.510	-1.490	 3.950	 6.696	c12c(cc3=CC=CC=CC=c3c2)C=CC1
-	:return: returns a copy of the file where the bad energy (here -18.690) is above 10, it means probably something was misfolded
-	"""
-
-	with open(basefile, 'rb') as r:
-		with open(basefile+'_nohighbad', 'wb') as w:
-			for i,line in enumerate(r):
-				# if i==10: break
-				els =
-
-				print els, els[5]
-				if abs(float(els[5])) > 10.0:
-					continue
-				else:
-					w.write(line)
+# def remove_high_bad(basefile):
+# 	"""
+# 	:param basefile: takes in a file formatted as
+# 	91413520	0	2	-44.6241473	-51.320	-18.690	-34.560	-0.510	-1.490	 3.950	 6.696	c12c(cc3=CC=CC=CC=c3c2)C=CC1
+# 	:return: returns a copy of the file where the bad energy (here -18.690) is above 10, it means probably something was misfolded
+# 	"""
+#
+# 	with open(basefile, 'rb') as r:
+# 		with open(basefile+'_nohighbad', 'wb') as w:
+# 			for i,line in enumerate(r):
+# 				# if i==10: break
+# 				els =
+#
+# 				print els, els[5]
+# 				if abs(float(els[5])) > 10.0:
+# 					continue
+# 				else:
+# 					w.write(line)
 
 def number_lines(f):
 	"""
@@ -296,6 +317,7 @@ if __name__ == "__main__":
 	from rdkit import Chem
 	from rdkit.Chem import AllChem
 	import glob
+	# treatdic()
 	# make_parralel_script(sorted(glob.glob('/home/macenrola/Documents/amberconvergedmols/all_pdbs_and_prmtops/*nab')))
 	# keepdifference('/home/macenrola/Documents/amberconvergedmols/allminus1stround',
 	# 			   '/home/macenrola/Documents/amberconvergedmols/2ndroundtar',
@@ -303,7 +325,7 @@ if __name__ == "__main__":
 	# print parse_amber_report()
 	# make_summary_dic_of_numbers_and_poses(glob.glob("/home/macenrola/Documents/amberconvergedmols/all_pdbs_and_prmtops/*report"))
 	# print get_number_from_fname()
-	# treatdic()
+	treatdic()
 	# generate_3d("/home/macenrola/Documents/docked_for_data_analysis/500krandomless25hvatoms")
 	# treatdic()
 	# number_lines('/home/macenrola/Documents/docked_for_data_analysis/400k-500klist_pdbqt')
