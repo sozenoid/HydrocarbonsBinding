@@ -34,6 +34,8 @@ class guestMolecule:
 			Chem.MolToMolFile(mols, '{}/{}.sdf'.format(self.workPath, i))
 		# self.showmollist(self.baseConf)
 		self.dockedConf = self.get_docked_conformations(self.baseConf)
+		for i, mols in enumerate(self.dockedConf):
+			Chem.MolToMolFile(mols, '{}/{}-{}.sdf'.format(self.workPath, i, 'docked'))
 		self.produce_formatted_PDBs(self.baseConf, self.dockedConf)
 		self.sequence_of_ref_atoms = self.build_ref_atom_sequence(pdbref)
 
