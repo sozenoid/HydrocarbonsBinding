@@ -75,14 +75,15 @@ class guestMolecule:
 	def build_ref_atom_sequence(self, coordlines):
 		"""
 		:pdbblock:
-		:return: a list like [C1, C2, N1, C3, C4]
+		:return: a list like [(C1,C), (C2,C), (N1,N1+), (C3,C), (C4,C)]
 		the list DOES NOT include the hydrogens at all but includes the protonation state
+		the tuple include the atom id and its type for proper hydrogen assignment later
 		"""
 		seq = []
 		for line in coordlines:
 			els = line.strip().split()
 			if els[0] == 'HETATM':
-				seq.append(els[2])
+				seq.append((els[2], els[-1]))
 			else:
 				return seq
 
@@ -241,7 +242,7 @@ class guestMolecule:
 			"""
 			:pre: takes a list of strings that represent the atomic coordinates in a pdb format
 			'HETATM    5  C5  UNL     1       2.952   0.220  -0.069  1.00  0.00           C  '
-			sequence_of_ref_atoms is a list of numbered atoms as [C1, N1, C2, C3, N2] etc... fortunately the hydrogens are last
+			sequence_of_ref_atoms is a list of numbered atoms as [(C1,C), (N1,N1+), (C2,C), (C3,C), (N2,N)] etc... fortunately the hydrogens are last
 			:return: return those very same lines aligned according to the sequence provided in argument but formatted according to the standard pdb string
 			"""
 			sortingdic = {}
@@ -250,7 +251,7 @@ class guestMolecule:
 				atomid = coordstring.split()[2]
 				sortingdic[atomid] = coordstring
 			for i, els in enumerate(sequence_of_ref_atoms):
-				temp = sortingdic[els].split()
+				temp = sortingdic[els[0]].split()
 				temp.insert(3, "")
 				temp.insert(5, "")
 				temp.insert(7, "")
@@ -263,8 +264,8 @@ class guestMolecule:
 				list_sorted_strings.append(self.pdbstring.format(temp[0], i + 1, temp[2], temp[3], temp[4],
 																 temp[5], int(temp[6]), temp[7], float(temp[8]),
 																 float(temp[9]),
-																 float(temp[10]), float(temp[11]), float(temp[12]),
-																 (temp[13]), (temp[14])))
+																 float(temp[10]), float(temp[11]), float(1),
+																 (temp[13]), (els[1])))
 			return list_sorted_strings
 
 		# return [self.pdbstring.format(x[1].split().insert(5,'').insert(14,'')) for x in sorted(sortingarray)]
@@ -289,6 +290,31 @@ class guestMolecule:
 			sdf_H_CO = Chem.MolFromPDBFile(original_pdbfile, removeHs=True)
 			return [x.strip() for x in Chem.MolToPDBBlock(sdf_H_CO).split("\n")]
 
+		def set_formal_charge_protonate(mol, sequence):
+			"""
+			:param mol: a molecule
+			:param sequence: the sequence in which the atoms appear inside the molecule file record as provided by the function build_ref_atom_sequence
+			:return: None, will modify the formal charges of the atoms that are supposed to be positive or negative based on the atom type given in the sequence
+			"""
+			print AllChem.CalcMolFormula(mol)
+			for i, els in enumerate(sequence):
+				# at.SetNoImplicit(True)
+				if '+' in els[1] or '-' in els[1]:
+					formal_charge = -1+2*int(els[1][-1]=='+')
+					# at.SetNoImplicit(True)
+					at = mol.GetAtomWithIdx(i)
+
+					print at.GetIsAromatic()
+					at.SetFormalCharge(formal_charge)
+					# at.SetNumExplicitHs(1)
+			print AllChem.CalcMolFormula(mol)
+			Chem.SanitizeMol(mol)
+			mol.UpdatePropertyCache()
+			Chem.SanitizeMol(mol)
+			print AllChem.CalcMolFormula(mol)
+
+			return Chem.AddHs(current_mol, addCoords=True)
+
 
 		conf_list = get_coordinates_block_from_pdbqt_file()
 		skeleton = generate_pdb_noH_withConnect()
@@ -300,8 +326,14 @@ class guestMolecule:
 		for conf in conf_list_sorted:
 			pdb_conf = conf + skeleton[len(conf):-1] # effectively the length of the cartesian coordinates assuming no header + the connect record
 			pdb_conf = '\n'.join(pdb_conf)
-			print pdb_conf
-			list_of_mols.append(Chem.AddHs(Chem.MolFromPDBBlock(pdb_conf), addCoords=True))
+			current_mol = Chem.MolFromPDBBlock(pdb_conf)
+			current_mol = set_formal_charge_protonate(current_mol, sequence_of_ref_atoms)
+			for at in current_mol.GetAtoms():
+				print at.GetSymbol(), at.GetFormalCharge(), at.GetExplicitValence(), at.GetImplicitValence(), at.GetHybridization(), at.GetNumRadicalElectrons(), at.GetDegree()
+			# setFormalCharge(current_mol, sequence_of_ref_atoms)
+			# print current_mol.GetAtomWithIdx(0).SetFormalCharge(1)
+			# print pdb_conf
+			list_of_mols.append(current_mol)
 		return list_of_mols
 
 

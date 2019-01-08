@@ -71,7 +71,7 @@ import glob
 from rdkit.ML.Cluster import Butina
 from rdkit.Chem import AllChem, TorsionFingerprints
 from mol_ops import align_mol, create_pdb_and_topology_from_sdf, get_frequency_report, align_mol
-from get_solvation import get_solvation_for_pdb
+# from get_solvation import get_solvation_for_pdb
 
 ########### 1) Get the structure from pubchem and print its energy
 def get_sdf_from_pbsite(pubchem_id):
@@ -1590,9 +1590,22 @@ def plot_heat_map_from_binary_file(binaryfile, conditions):
 	ax = sns.heatmap(data)
 	plt.show()
 
+def test_charge_representation_in_pdb(smi='C1CNC(=[NH+]1)C12CC3CC(C1)CC(C2)(C3)C1=[NH+]CCN1'):
+	"""
+	:param smi: A SMI test
+	:return: produces a pdb file containing the 3D structure of the molecule, just to see how it is reprensented
+	"""
+	mol = Chem.MolFromSmiles(smi)
+	mol = Chem.AddHs(mol)
+	AllChem.EmbedMolecule(mol)
+	AllChem.MMFFOptimizeMolecule(mol)
+	Chem.MolToPDBFile(mol, '/home/macenrola/Desktop/test_charge.pdb')
+	for at in mol.GetAtoms():
+		print at.GetExplicitValence(), at.GetFormalCharge(), at.GetSymbol(), at.GetImplicitValence()
 
 if __name__ == '__main__':       
 	import glob
+	test_charge_representation_in_pdb()
 	# conditions = make_heat_map_input_from_expandedsumfile('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation_with_entropy_NODUPLICATE_reformatted_sortednottolargenotthreeringsnoallenesbelow200kcal_extendedphysicalfeatures')
 	# plot_heat_map_from_binary_file('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation_with_entropy_NODUPLICATE_reformatted_sortednottolargenotthreeringsnoallenesbelow200kcal_extendedphysicalfeatures_inputforheat', conditions)
 	# add_numbers_to_sumfile('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/details-amber-solv-entropy')
@@ -1610,7 +1623,7 @@ if __name__ == '__main__':
 	# 	'/home/macenrola/Thesis/ESCAPETIME/NH3-no-charge/CB7_DBOA_1H_in0_PD-NH3_wB97XD_6-31Gs_frag2_SDF2PDB.mol2'])
 	# remove_allenes('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation_with_entropy_NODUPLICATE_reformatted_sortednottolargenotthreerings')
 	# remove_3_membered_rings('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation_with_entropy_NODUPLICATE_reformatted_sortednottolarge')
-	copy_sdfs_for_analysis('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation_with_entropy_NODUPLICATE_reformatted_sortednottolargenotthreeringsnoallenesbelow200kcal_extendedphysicalfeatures')
+	# copy_sdfs_for_analysis('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation_with_entropy_NODUPLICATE_reformatted_sortednottolargenotthreeringsnoallenesbelow200kcal_extendedphysicalfeatures')
 	# extract_best_guest_and_complex_from_tars('/media/macenrola/cb650d89-4c88-4666-a43b-08abb5756b5a/HYDROCARBONS_ALL_CONFS/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE')
 	# add_solvation_to_sumlist('/media/macenrola/cb650d89-4c88-4666-a43b-08abb5756b5a/HYDROCARBONS_ALL_CONFS/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE')
 	# add_entropy_to_sumlist('/media/macenrola/cb650d89-4c88-4666-a43b-08abb5756b5a/HYDROCARBONS_ALL_CONFS/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation')
