@@ -31,13 +31,12 @@ class guestMolecule:
 		# self.baseConf = [Chem.AddHs(x, addCoords=True) for x in Chem.SDMolSupplier(sdfref)]
 		self.baseConf = self.generate_mols_withH_withCO_from_ALL_pdbqt(pdbqtblock, pdbref)
 		for i, mols in enumerate(self.baseConf):
-			Chem.MolToMolFile(mols, '{}/{}.sdf'.format(self.workPath, i))
+			Chem.MolToPDBFile(mols, '{}/{}-{}.pdb'.format(self.workPath, i, 'guest'))
 		# self.showmollist(self.baseConf)
 		self.dockedConf = self.get_docked_conformations(self.baseConf)
 		for i, mols in enumerate(self.dockedConf):
-			Chem.MolToMolFile(mols, '{}/{}-{}.sdf'.format(self.workPath, i, 'docked'))
+			Chem.MolToPDBFile(mols, '{}/{}-{}.pdb'.format(self.workPath, i, 'docked'))
 		self.produce_formatted_PDBs(self.baseConf, self.dockedConf)
-		self.sequence_of_ref_atoms = self.build_ref_atom_sequence(pdbref)
 
 		# print self.molName
 	# def showmollist(self, listOfMols):
@@ -116,6 +115,8 @@ class guestMolecule:
 		"""
 		mol = molin
 		flavour = 28
+		# Chem.MolToPDBFile(molin, fout)
+
 		if converge:
 			# converge_molecule(mol)
 			print "Can't converge molecule, this function isn't defined"
@@ -135,7 +136,7 @@ class guestMolecule:
 					atom.GetSymbol() + str(atm_dic[atom.GetSymbol()]) + ' ' * int(atm_dic[atom.GetSymbol()] < 10),
 					residueName[0])))
 				atom.GetMonomerInfo().SetResidueNumber(residueNumber[0])
-			Chem.MolToPDBFile(mol, fout, flavor=flavour)
+			Chem.MolToPDBFile(mol, fout, flavour=flavour)
 			self.fix_PDB_spacing(fout, hostname=residueName[1])
 			return
 		else:
