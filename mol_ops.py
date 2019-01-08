@@ -780,7 +780,7 @@ def generate_PDBs_from_host_can_file(canfile):
 			mol = Chem.AddHs(mol)
 			AllChem.EmbedMolecule(mol)
 			AllChem.MMFFOptimizeMolecule(mol)
-			Chem.MolToPDBFile(mol, '{}/{}-orig.pdb'.format(path,nbr))
+			Chem.MolToMolFile(mol, '{}/{}-orig.sdf'.format(path,nbr))
 if __name__ == "__main__":
 	import glob
 	from subprocess import call

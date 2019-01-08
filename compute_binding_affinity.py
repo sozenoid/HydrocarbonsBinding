@@ -17,37 +17,40 @@
 
 
 class guestMolecule:
-	def __init__(self, pdbqtblock, sdfref):
+	def __init__(self, pdbqtblock, pdbref):
 		"""
 		PRE : pdbqtblock is a valid pdbqt file containing n conformations for the same guest molecule (usually 9 or less).
 			  The rdkit module should be available. The order of the atoms in sdfref and pdbqt block should be the same.
-			  SDFREF contains the information about hydrogen placements and bonding, this is needed as the passage through pdbqt format breaks connectivity records and hydrogen positions
+			  pdbref contains the information about hydrogen placements and bonding, this is needed as the passage through pdbqt format breaks connectivity records and hydrogen positions
 		POST : an object guestMolecule is created that contains 
 		"""
 		self.workPath = "/home/macenrola/Desktop/"
-		self.pathtocbpdbfile = "/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/HydrocarbonsBindingPython/CB_candidate_data/CB_candidate.pdb"
+		self.pathtocbpdbfile = "/home/macenrola/Documents/amberconvergedmols/CB_DATA/CB.pdb"
 		self.pdbstring = "{:6s}{:5d} {:^4s}{:1s}{:3s} {:1s}{:4d}{:1s}   {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}          {:>2s}{:>6s}"
-		self.molName = sdfref.split('/')[-1][:-4]
+		self.molName = pdbref.split('/')[-1][:-4]
 		# self.baseConf = [Chem.AddHs(x, addCoords=True) for x in Chem.SDMolSupplier(sdfref)]
-		self.baseConf = self.generate_mols_withH_withCO_from_ALL_pdbqt(pdbqtblock, sdfref)
+		self.baseConf = self.generate_mols_withH_withCO_from_ALL_pdbqt(pdbqtblock, pdbref)
+		for i, mols in enumerate(self.baseConf):
+			Chem.MolToMolFile(mols, '{}/{}.sdf'.format(self.workPath, i))
 		# self.showmollist(self.baseConf)
 		self.dockedConf = self.get_docked_conformations(self.baseConf)
 		self.produce_formatted_PDBs(self.baseConf, self.dockedConf)
+		self.sequence_of_ref_atoms = self.build_ref_atom_sequence(pdbref)
 
 		# print self.molName
-	def showmollist(self, listOfMols):
-		"""
-		:param listOfMols: a list of mols in rdkit format
-		:return: prints the mols as sdf blocks
-		"""
-		if len(listOfMols) == []:
-			print 'the list is empty'
-		elif len(listOfMols) == 1:
-			print Chem.MolToMolBlock(listOfMols)
-		else:
-			for mol in listOfMols:
-				print "smth should show"
-				print Chem.MolToMolBlock(mol)
+	# def showmollist(self, listOfMols):
+	# 	"""
+	# 	:param listOfMols: a list of mols in rdkit format
+	# 	:return: prints the mols as sdf blocks
+	# 	"""
+	# 	if len(listOfMols) == []:
+	# 		print 'the list is empty'
+	# 	elif len(listOfMols) == 1:
+	# 		print Chem.MolToMolBlock(listOfMols)
+	# 	else:
+	# 		for mol in listOfMols:
+	# 			print "smth should show"
+	# 			print Chem.MolToMolBlock(mol)
 
 	def get_docked_conformations(self, listOfMols):
 		"""
@@ -69,6 +72,20 @@ class guestMolecule:
 		"""
 		pass
 
+	def build_ref_atom_sequence(self, coordlines):
+		"""
+		:pdbblock:
+		:return: a list like [C1, C2, N1, C3, C4]
+		the list DOES NOT include the hydrogens at all but includes the protonation state
+		"""
+		seq = []
+		for line in coordlines:
+			els = line.strip().split()
+			if els[0] == 'HETATM':
+				seq.append(els[2])
+			else:
+				return seq
+
 	def produce_formatted_PDBs(self, listOfMols, listOfDockedMols):
 		"""
 		PRE: Takes in rdkit mols of guests and their docked versions
@@ -76,6 +93,7 @@ class guestMolecule:
 		"""
 		for lst in zip(["guests", "complex"], [listOfMols, listOfDockedMols]):
 			for i, mol in enumerate(lst[1]):
+				mol.SetProp('_Name', self.molName)
 				self.write_mol_to_pdb(mol, fout="{}{}_{}Pose{}.pdb".format(self.workPath, self.molName, lst[0], i))
 
 	def remove_CONNECT_LINES(self, fname):
@@ -90,8 +108,8 @@ class guestMolecule:
 
 	def write_mol_to_pdb(self, molin, fout, converge=False, residueName=('GST', 'CB7'), residueNumber=(1, 2)):
 		"""
-		PRE : Takes in the absolute path to a SDF file, if a single molecule is converted only the first element of both residueName and residueNumber is used, both in the case of a complex
-		POST: Produces a PDB file by converting the original molecule from the SDF file, DOES NOT optimize the conformation by default
+		PRE : Takes in a rdkit mol, if a single molecule is converted only the first element of both residueName and residueNumber is used, both in the case of a complex
+		POST: Produces a PDB file, DOES NOT optimize the conformation by default
 		"""
 		mol = molin
 		flavour = 28
@@ -183,9 +201,9 @@ class guestMolecule:
 		with open(fname, 'wb') as w:
 			w.writelines('\n'.join(new_lines) + '\n')
 
-	def generate_mols_withH_withCO_from_ALL_pdbqt(self, ALL_pdbqt_file, original_sdf_file):
+	def generate_mols_withH_withCO_from_ALL_pdbqt(self, ALL_pdbqt_file, original_pdbfile):
 		"""
-		PRE: Takes in one sdf file and a pdbqt file, one sdf file with correct bonding information and arbitrary coordinates and another one containing all ligand docked conformations in pdbqt format
+		PRE: Takes in one pdb file and a pdbqt file, one sdf file with correct bonding information and arbitrary coordinates and another one containing all ligand docked conformations in pdbqt format
 			 where the coordinates are desireable but there is no hydrogen or connect records
 		POST: Produces a list of mols with connect records taken from the pdb file that has both hydrogens and connect records and the coordinates from the
 			  pdbqt file. The mols are under the rdkit format as python objects
@@ -213,25 +231,26 @@ class guestMolecule:
 							elif "ENDMDL" in line:
 								list_of_conf_as_string.append(temp)
 								# print temp
-								temp = []
 								break
 							else:
 								line = r.next()
 
 			return list_of_conf_as_string
 
-		def sort_coordinate_list_by_carbon_number(string_of_coordinates_line):
+		def sort_coordinate_list_by_carbon_number(string_of_coordinates_line, sequence_of_ref_atoms):
 			"""
 			:pre: takes a list of strings that represent the atomic coordinates in a pdb format
 			'HETATM    5  C5  UNL     1       2.952   0.220  -0.069  1.00  0.00           C  '
-			:return: return those very same lines aligned by carbon number, in this case C5
+			sequence_of_ref_atoms is a list of numbered atoms as [C1, N1, C2, C3, N2] etc... fortunately the hydrogens are last
+			:return: return those very same lines aligned according to the sequence provided in argument but formatted according to the standard pdb string
 			"""
-			sortingarray = []
+			sortingdic = {}
 			list_sorted_strings = []
 			for coordstring in string_of_coordinates_line:
-				sortingarray.append((int(coordstring.split()[2][1:]), coordstring))
-			for i, els in enumerate(sorted(sortingarray)):
-				temp = els[1].split()
+				atomid = coordstring.split()[2]
+				sortingdic[atomid] = coordstring
+			for i, els in enumerate(sequence_of_ref_atoms):
+				temp = sortingdic[els].split()
 				temp.insert(3, "")
 				temp.insert(5, "")
 				temp.insert(7, "")
@@ -250,14 +269,16 @@ class guestMolecule:
 
 		# return [self.pdbstring.format(x[1].split().insert(5,'').insert(14,'')) for x in sorted(sortingarray)]
 
-		def sort_list_of_list_of_coordinate_string(list_of_list_coords):
+
+
+		def sort_list_of_list_of_coordinate_string(list_of_list_coords, sequence_of_ref_atoms):
 			"""
 			:parms: takes in a list of list of strings where each sublist corresponds to a conformation of a given molecule while the strings are the atomic coordiantes in pdb format
 			:return: the very same list of list where the individual strings are sorted within each sublist according to the carbon number (sort_coordinate_list_by_carbon_number)
 			"""
 			temp = []
 			for confs in list_of_list_coords:
-				temp.append(sort_coordinate_list_by_carbon_number(confs))
+				temp.append(sort_coordinate_list_by_carbon_number(confs,sequence_of_ref_atoms))
 			return temp
 
 		def generate_pdb_noH_withConnect():
@@ -265,18 +286,21 @@ class guestMolecule:
 			PRE: Takes in a sdf file with hydrogens and bonds connect
 			POST: Generates a pdb block as a list of strings without the hydrogens yet still the hydrogens for the remaining carbons
 			"""
-			sdf_H_CO = Chem.SDMolSupplier(original_sdf_file, removeHs=True)[0]
+			sdf_H_CO = Chem.MolFromPDBFile(original_pdbfile, removeHs=True)
 			return [x.strip() for x in Chem.MolToPDBBlock(sdf_H_CO).split("\n")]
+
 
 		conf_list = get_coordinates_block_from_pdbqt_file()
 		skeleton = generate_pdb_noH_withConnect()
-		conf_list_sorted = sort_list_of_list_of_coordinate_string(conf_list)
+		print skeleton
+		sequence_of_ref_atoms = self.build_ref_atom_sequence(skeleton)
+		conf_list_sorted = sort_list_of_list_of_coordinate_string(conf_list, sequence_of_ref_atoms)
 		# print '\n'.join(skeleton)
 		list_of_mols = []
 		for conf in conf_list_sorted:
-			pdb_conf = [skeleton[0]] + conf + skeleton[len(conf) + 1:-1]
+			pdb_conf = conf + skeleton[len(conf):-1] # effectively the length of the cartesian coordinates assuming no header + the connect record
 			pdb_conf = '\n'.join(pdb_conf)
-			# print pdb_conf
+			print pdb_conf
 			list_of_mols.append(Chem.AddHs(Chem.MolFromPDBBlock(pdb_conf), addCoords=True))
 		return list_of_mols
 
@@ -298,6 +322,10 @@ if __name__ == "__main__":
 	from rdkit import Chem
 	from rdkit.Chem import AllChem
 	import glob
+	guestMolecule('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/391-orig_out.pdbqt',
+				  '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/391-orig.pdb'
+				  )
+
 	# guestMolecule('/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/HydrocarbonsBindingPython/CB_candidate_data/CB_candidate.pdbqt',
 	# 			  '/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/HydrocarbonsBindingPython/CB_candidate_data/CB_candidate.sdf')
 	# convert_sdf_to_pdb('/home/macenrola/Desktop/121487919xzzepjr_OUT_GUEST30.sdf')
@@ -321,3 +349,5 @@ if __name__ == "__main__":
 # for i, m in enumerate(listofmols):
 # 	print Chem.MolToMolFile(m, "/home/macenrola/Desktop/testPose{}.sdf".format(i))
 # convert_sdf_to_pdb("/home/macenrola/Desktop/602809xziop_OUT_GUEST22.sdf")
+# 	generate_mols_withH_withCO_from_ALL_pdbqt('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/140-orig_out.pdbqt',
+# 											  '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/140-orig.pdb')
