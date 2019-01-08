@@ -759,6 +759,28 @@ def make_parallel_frequency_reports(listOfPdbs):
 	:return:
 	"""
 
+
+def generate_PDBs_from_host_can_file(canfile):
+	"""
+	:param canfile: the can file is formatted as follows
+	[CH-]1C=CC=C1	140	dES:91.54	dFF:-12.74	BC:6
+	[CH-]1C=CC=C1	142	dES:91.50	dFF:-12.75	BC:5.6
+	CC12CC3CC(C1)(C)CC(C2)(C3)N	156	dES:11.76	dFF:-15.34	BC:4.39
+
+
+	:return: a pdf file for each of them using the number in the second column as name:
+	canfile directory name + number + initial guest + .pdb
+	"""
+	path = '/'.join(canfile.split('/')[:-1])
+	print path
+	with open(canfile, 'rb') as r:
+		for line in r:
+			smi,nbr = line.strip().split()[:2]
+			mol = Chem.MolFromSmiles(smi)
+			mol = Chem.AddHs(mol)
+			AllChem.EmbedMolecule(mol)
+			AllChem.MMFFOptimizeMolecule(mol)
+			Chem.MolToPDBFile(mol, '{}/{}-orig.pdb'.format(path,nbr))
 if __name__ == "__main__":
 	import glob
 	from subprocess import call
@@ -780,12 +802,12 @@ if __name__ == "__main__":
 	# 	except:
 	# 		with open(errfile, 'ab') as a:
 	# 			a.write(f+'\n')
-
-	with open('/home/macenrola/Documents/vasp/xylene/xyleneSmiles', 'rb') as r:
-		for line in r:
-			name, smi = line.strip().split('\t')
-			print name, smi
-			get_binding_energy_withCB(smi,  "/home/macenrola/Documents/vasp/xylene/{}".format(name+"_CB7"), get_CB_BLOCK())
+	generate_PDBs_from_host_can_file('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/pdbs/res_host_with_BC.can')
+	# with open('/home/macenrola/Documents/vasp/xylene/xyleneSmiles', 'rb') as r:
+	# 	for line in r:
+	# 		name, smi = line.strip().split('\t')
+	# 		print name, smi
+	# 		get_binding_energy_withCB(smi,  "/home/macenrola/Documents/vasp/xylene/{}".format(name+"_CB7"), get_CB_BLOCK())
 
 	# mol = Chem.MolFromMolBlock(get_CB_BLOCK(), removeHs=False)
 	# Chem.MolToPDBFile(mol, "/home/macenrola/Desktop/cb5.pdb")
