@@ -1603,9 +1603,19 @@ def test_charge_representation_in_pdb(smi='C1CNC(=[NH+]1)C12CC3CC(C1)CC(C2)(C3)C
 	for at in mol.GetAtoms():
 		print at.GetExplicitValence(), at.GetFormalCharge(), at.GetSymbol(), at.GetImplicitValence()
 
+def test_read_invalid_obabel_mol(f='/home/macenrola/Desktop/391-orig_guestsPose1.pdb'):
+	"""
+	:param f: the invalid mol pdbfile
+	:return: None
+	"""
+	mol = Chem.MolFromPDBFile(f, removeHs=False)
+	Chem.MolToMolFile(mol, f[:-4]+".sdf")
+	return
+
 if __name__ == '__main__':       
 	import glob
-	test_charge_representation_in_pdb()
+	# test_charge_representation_in_pdb()
+	test_read_invalid_obabel_mol()
 	# conditions = make_heat_map_input_from_expandedsumfile('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation_with_entropy_NODUPLICATE_reformatted_sortednottolargenotthreeringsnoallenesbelow200kcal_extendedphysicalfeatures')
 	# plot_heat_map_from_binary_file('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation_with_entropy_NODUPLICATE_reformatted_sortednottolargenotthreeringsnoallenesbelow200kcal_extendedphysicalfeatures_inputforheat', conditions)
 	# add_numbers_to_sumfile('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/details-amber-solv-entropy')

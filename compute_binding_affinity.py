@@ -136,7 +136,7 @@ class guestMolecule:
 					atom.GetSymbol() + str(atm_dic[atom.GetSymbol()]) + ' ' * int(atm_dic[atom.GetSymbol()] < 10),
 					residueName[0])))
 				atom.GetMonomerInfo().SetResidueNumber(residueNumber[0])
-			Chem.MolToPDBFile(mol, fout, flavour=flavour)
+			Chem.MolToPDBFile(mol, fout, flavor=flavour)
 			self.fix_PDB_spacing(fout, hostname=residueName[1])
 			return
 		else:
