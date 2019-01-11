@@ -24,7 +24,7 @@ class guestMolecule:
 			  pdbref contains the information about hydrogen placements and bonding, this is needed as the passage through pdbqt format breaks connectivity records and hydrogen positions
 		POST : an object guestMolecule is created that contains 
 		"""
-		self.workPath = "/home/macenrola/Desktop/"
+		self.workPath = "/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/"
 		self.pathtocbpdbfile = "/home/macenrola/Documents/amberconvergedmols/CB_DATA/CB.pdb"
 		self.pdbstring = "{:6s}{:5d} {:^4s}{:1s}{:3s} {:1s}{:4d}{:1s}   {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}          {:>2s}{:>6s}"
 		self.molName = pdbref.split('/')[-1][:-4]
@@ -114,7 +114,8 @@ class guestMolecule:
 		POST: Produces a PDB file, DOES NOT optimize the conformation by default
 		"""
 		mol = molin
-		flavour = 28
+		flavour = 28 # how it originally worked
+		# flavour=0 # default
 		# Chem.MolToPDBFile(molin, fout)
 
 		if converge:
@@ -357,10 +358,15 @@ if __name__ == "__main__":
 	from rdkit import Chem
 	from rdkit.Chem import AllChem
 	import glob
-	guestMolecule('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/391-orig_out.pdbqt',
-				  '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/391-orig.pdb'
-				  )
-
+	# guestMolecule('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/391-orig_out.pdbqt',
+	# 			  '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/391-orig.pdb'
+	# 			  )
+	flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/*-orig.pdb')
+	for f in flist:
+		print f
+		try:
+			guestMolecule(f[:-4]+'_out.pdbqt',f)
+		except: pass
 	# guestMolecule('/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/HydrocarbonsBindingPython/CB_candidate_data/CB_candidate.pdbqt',
 	# 			  '/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/HydrocarbonsBindingPython/CB_candidate_data/CB_candidate.sdf')
 	# convert_sdf_to_pdb('/home/macenrola/Desktop/121487919xzzepjr_OUT_GUEST30.sdf')

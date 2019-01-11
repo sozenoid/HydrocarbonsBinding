@@ -1612,10 +1612,27 @@ def test_read_invalid_obabel_mol(f='/home/macenrola/Desktop/391-orig_guestsPose1
 	Chem.MolToMolFile(mol, f[:-4]+".sdf")
 	return
 
+def find_untreated(flist):
+	"""
+	:param flist: takes in a list of prmtops such as 276-orig_guestsPose1.prmtop 248-orig_complexPose1-run_tops.sh
+	:return: a list of files that correspond to the .sh file that should have run to produce them such as 276-orig_guestsPose1-run_tops.sh
+		276-orig_guestsPose1-run_tops.sh
+	"""
+	with open('/home/macenrola/Desktop/unprocessed', 'wb'): pass
+	for f in flist:
+		print f[:-12]
+		try:
+			with open(f[:-12]+'.prmtop', 'rb') as r: pass
+		except:
+			with open('/home/macenrola/Desktop/unprocessed', 'ab') as a:
+				a.write('{}\n'.format(f))
+
 if __name__ == '__main__':       
 	import glob
 	# test_charge_representation_in_pdb()
-	test_read_invalid_obabel_mol()
+	# test_read_invalid_obabel_mol()
+	flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/*sh')
+	find_untreated(flist)
 	# conditions = make_heat_map_input_from_expandedsumfile('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation_with_entropy_NODUPLICATE_reformatted_sortednottolargenotthreeringsnoallenesbelow200kcal_extendedphysicalfeatures')
 	# plot_heat_map_from_binary_file('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation_with_entropy_NODUPLICATE_reformatted_sortednottolargenotthreeringsnoallenesbelow200kcal_extendedphysicalfeatures_inputforheat', conditions)
 	# add_numbers_to_sumfile('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/details-amber-solv-entropy')

@@ -387,7 +387,7 @@ def create_pdb_and_topology_from_sdf(fin, resName = ('GST', 'HST'), resNumber = 
 		convert_sdf_to_pdb(fin, residueName=resName, residueNumber=resNumber, fout=fout)
 		make_topology(fout)
 
-def make_topology(guestPDB, hostPDB = '', compPDB = '', tleapexecpath='/home/macenrola/Documents/Thesis/amber16/bin/'):
+def make_topology(guestPDB, hostPDB = '', compPDB = '', tleapexecpath='/home/macenrola/amber16/bin/'):
 	"""
 	PRE  : If a guest, just takes in a pdb file, if a complex, takes three corresponding to the guest, host and complex. The complex would have no connect records while the guest and host pdb would have some 
 		   If this method is used as a chain DON't forget to run the .sh scripts of the host guest subfiles from the complex before running the code to get the final complex prmtop. Alternatively, run everything TWICE or more haha
@@ -399,12 +399,13 @@ def make_topology(guestPDB, hostPDB = '', compPDB = '', tleapexecpath='/home/mac
 	def make_topology_one_mol(tleapexecpath, targetPDB):
 		"""
 		PRE  : Takes in one molecule, that has a NAMED residue number, it is a valid file from which the charge can be extracted. USING GASTEIGER CHARGES BECAUSE BCC TOO LONG
+				NOTE: GASTEIGER CHARGES IMPLY 0 Net charge, use BCC for charge !=0
 		POST : writes its tleap script for topology generation
 			   NOTE: The output file is named as the pdbfile without '.pdb' + -run_tops.sh 
 		"""
 		script_bin = [
 			'# Default atom type is GAFF -at gaff',
-			'{0}antechamber -i {2}.pdb -fi pdb -o {2}.mol2 -fo mol2 -c gas -nc {1} -s 2 -j 4',
+			'{0}antechamber -i {2}.pdb -fi pdb -o {2}.mol2 -fo mol2 -c bcc -nc {1} -s 2 -j 4',
 			'# Unit names in the text are not variables but actual residue/unit names ><',
 			'{0}parmchk2 -i {2}.mol2 -f mol2 -o {2}.frcmod -f frcmod',
 			'{0}tleap -s -f {2}-tleap.in > {2}-tleap.log',
@@ -422,7 +423,8 @@ def make_topology(guestPDB, hostPDB = '', compPDB = '', tleapexecpath='/home/mac
 			]
 		m = Chem.MolFromPDBFile(targetPDB, removeHs=False)
 		target = targetPDB[:-4]
-		charge = Chem.GetFormalCharge(m)
+		# charge = Chem.GetFormalCharge(m) # Doesn't work as the rdkit has trouble reading and writing flavour 28 pdbfiles
+		charge = get_charge_from_pdb_text(targetPDB)
 		residuename = Chem.SplitMolByPDBResidues(m).keys()[0]
 
 		script_bin = [x.format(tleapexecpath, charge, target, residuename)+'\n' for x in script_bin]
@@ -579,7 +581,7 @@ def converge_molecule(molecule, n_steps=100000, tol=1e-8):
 	return cf, ff.CalcEnergy()	
 
 
-def get_frequency_report(target_pdb, target_prmtop, nabpath='/home/macenrola/Documents/Thesis/amber16/bin/nab'):
+def get_frequency_report(target_pdb, target_prmtop, nabpath='/home/macenrola/amber16/bin/nab'):
 	"""
 	PRE : Takes in a target pdb file and its prmtop file
 		  NOTE: Should try to include the frcmod file as well.
@@ -594,13 +596,13 @@ def get_frequency_report(target_pdb, target_prmtop, nabpath='/home/macenrola/Doc
 
 	'm = getpdb( "{0}" );',
 	'readparm( m, "{1}");',
-	'mm_options( "cut=999., ntpr=50, nsnb=99999, diel=C, gb=0, dielc=1.0" );',
+	'mm_options( "cut=999., ntpr=50, nsnb=99999, diel=C, gb=1, dielc=1.0" );',
 	'mme_init( m, NULL, "::Z", x, NULL);',
 	'setxyz_from_mol( m, NULL, x );',
 
 	'// conjugate gradient minimization',
 	# 'dgrad = 3*natoms*0.001;',
-	'conjgrad(x, 3*m.natoms, fret, mme, 0.001, 0.001, 200000 );',
+	'conjgrad(x, 3*m.natoms, fret, mme, 0.0001, 0.0001, 200000 );',
 
 	'// Newton-Raphson minimization\fP',
 	'mm_options( "ntpr=1" );',
@@ -758,8 +760,7 @@ def make_parallel_frequency_reports(listOfPdbs):
 	:param listOfPdbs:
 	:return:
 	"""
-
-
+	pass
 def generate_PDBs_from_host_can_file(canfile):
 	"""
 	:param canfile: the can file is formatted as follows
@@ -780,13 +781,49 @@ def generate_PDBs_from_host_can_file(canfile):
 			mol = Chem.AddHs(mol)
 			AllChem.EmbedMolecule(mol)
 			AllChem.MMFFOptimizeMolecule(mol)
-			Chem.MolToMolFile(mol, '{}/{}-orig.sdf'.format(path,nbr))
+			Chem.MolToPDBFile(mol, '{}/{}-orig.pdb'.format(path, nbr))
+
+def get_charge_from_pdb_text(pdbfile):
+	"""
+	:pdbfile: a text pdb file representing a molecule
+	:returns: the number of times the symbol + appears in the molecule minus the number of times the symbol - appears in the molecule
+	"""
+	accPos = 0
+	accNeg = 0
+	with open(pdbfile, 'rb') as r:
+		lines = r.readlines()
+		for line in [x.strip() for x in lines]:
+			if line[-1] == "+":
+				accPos+=1
+			if line[-1] == "-":
+				accNeg +=1
+	return accPos-accNeg
+
 if __name__ == "__main__":
 	import glob
 	from subprocess import call
 	from multiprocessing import Pool, TimeoutError
 	import time
 	import os
+	# print get_charge_from_pdb_text('/home/macenrola/Desktop/391-orig_guestsPose1.pdb')
+	# make_topology('/home/macenrola/Desktop/CB_candidate_formatted.pdb')
+	# make_topology('/home/macenrola/Desktop/391-orig_guestsPose1.pdb')
+	# make_topology('/home/macenrola/Desktop/391-orig_guestsPose1.pdb','/home/macenrola/Desktop/CB_candidate_formatted.pdb','/home/macenrola/Desktop/391-orig_complexPose1.pdb')
+
+	# print get_frequency_report('/home/macenrola/Desktop/391-orig_guestsPose1.pdb','/home/macenrola/Desktop/391-orig_guestsPose1.prmtop')
+	# print get_frequency_report('/home/macenrola/Desktop/391-orig_complexPose1.pdb',
+	# 					 '/home/macenrola/Desktop/391-orig_complexPose1.prmtop')
+
+	# flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/*-orig_guestsPose*.pdb')
+	# for f in flist:
+	# 	fcomp = str.replace(f, 'guests', 'complex')
+	# 	make_topology(f)
+	# 	make_topology(f, '/home/macenrola/Documents/amberconvergedmols/CB_DATA/CB_candidate_formatted.pdb', fcomp)
+
+
+
+
+
 	# make_job_kinetic_barrier()
 	#
 	# print get_frequency_report('/home/macenrola/Desktop/931xae_OUT_GUEST15_complexPose0.pdb',
@@ -802,7 +839,8 @@ if __name__ == "__main__":
 	# 	except:
 	# 		with open(errfile, 'ab') as a:
 	# 			a.write(f+'\n')
-	generate_PDBs_from_host_can_file('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/pdbs/res_host_with_BC.can')
+	# generate_PDBs_from_host_can_file('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/pdbs/res_host_with_BC.can')
+	generate_PDBs_from_host_can_file('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/pdbs/just259')
 	# with open('/home/macenrola/Documents/vasp/xylene/xyleneSmiles', 'rb') as r:
 	# 	for line in r:
 	# 		name, smi = line.strip().split('\t')
@@ -831,6 +869,7 @@ if __name__ == "__main__":
 
 	# get_transition('/home/macenrola/Desktop/MD_trajectories/DFT/C2H4/rmstraj38.dat')
 	# make_topology('/home/macenrola/Desktop/1140xah_OUT_GUEST117_guestsPose0.pdb')
+
 	# make_topology('/home/macenrola/Desktop/1140xah_OUT_GUEST117_guestsPose0.pdb', '/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/HydrocarbonsBindingPython/CB_candidate_data/CB_candidate_formatted.pdb',
 	# 			  '/home/macenrola/Desktop/1140xah_OUT_GUEST117_complexPose0.pdb')
 	# create_pdb_and_topology_from_sdf('/home/macenrola/Thesis/hydrocarbons/CB_REFERENCE_VALUES/CB_candidate.sdf', ('CB7', 'haha'))
