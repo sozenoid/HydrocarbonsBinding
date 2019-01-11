@@ -1622,7 +1622,7 @@ def find_untreated(flist):
 	for f in flist:
 		print f[:-12]
 		try:
-			with open(f[:-12]+'.prmtop', 'rb') as r: pass
+			with open(f[:-12]+'-freq.out', 'rb') as r: pass
 		except:
 			with open('/home/macenrola/Desktop/unprocessed', 'ab') as a:
 				a.write('{}\n'.format(f))

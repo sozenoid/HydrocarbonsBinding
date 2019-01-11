@@ -361,12 +361,22 @@ if __name__ == "__main__":
 	# guestMolecule('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/391-orig_out.pdbqt',
 	# 			  '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/391-orig.pdb'
 	# 			  )
-	flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/*-orig.pdb')
-	for f in flist:
-		print f
-		try:
-			guestMolecule(f[:-4]+'_out.pdbqt',f)
-		except: pass
+
+
+	# flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/*-orig.pdb')
+	# for f in flist:
+	# 	print f
+	# 	try:
+	# 		guestMolecule(f[:-4]+'_out.pdbqt',f)
+	# 	except: pass
+	# guestMolecule('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/259-orig_out.pdbqt',
+	# 			  '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/259-orig.pdb')
+
+
+
+
+
+
 	# guestMolecule('/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/HydrocarbonsBindingPython/CB_candidate_data/CB_candidate.pdbqt',
 	# 			  '/home/macenrola/Documents/Thesis/ScreeningManuscriptFinalData/HydrocarbonsBindingPython/CB_candidate_data/CB_candidate.sdf')
 	# convert_sdf_to_pdb('/home/macenrola/Desktop/121487919xzzepjr_OUT_GUEST30.sdf')

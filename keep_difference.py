@@ -73,8 +73,9 @@ def parse_amber_report(fname, indexofff):
 	vibrational = ""
 	type = ""
 	posenum = ""
-	number = fname.split('/')[-1].split('x')[0]
-	if fname.split("_")[-1][0] == "g":
+	number = get_number_from_fname(fname)
+	# if fname.split("_")[-1][0] == "g":
+	if 'guests' in fname:
 		type = "GUEST"
 	else:
 		type = "COMPLEX"
@@ -103,7 +104,7 @@ def get_number_from_fname(fname="/home/macenrola/Desktop/12883016xzzabfs_OUT_GUE
 				  /home/macenrola/Desktop/12864396xzzabef_OUT_GUEST5_guestsPose1-freq.nab-freqreport
 	:return: the pubchem number contained in the file name
 	"""
-	return int(fname.split('/')[-1].split('x')[0])
+	return int(fname.split('/')[-1].split('-')[0])
 
 def make_summary_dic_of_numbers_and_poses(listoffiles, indexofff=-3):
 	"""
@@ -149,13 +150,13 @@ def make_summary_dic_of_numbers_and_poses(listoffiles, indexofff=-3):
 			sumdic[number][type] = {}
 		sumdic[number][type][posenum] = (breakdown, total, vibrational)
 
-	with open("/home/macenrola/Desktop/sumdic_with_apolar", "wb") as handle:
+	with open("/home/macenrola/Desktop/sumdic_with_apolar_known_guests", "wb") as handle:
 		pk.dump(sumdic, handle)
 
 	# with open("/home/macenrola/Desktop/sumdic", "rb") as r:
 	# 	print pk.load(r)
 
-def treatdic(sumdic_file = "/home/macenrola/Desktop/sumdic_with_apolar"):
+def treatdic(sumdic_file = "/home/macenrola/Desktop/sumdic_with_apolar_known_guests"):
 	"""
 
 	:param sumdic_file: takes in a dic formatted as in make_summary_dic_of_numbers_and_poses and produces the binding energies
@@ -170,6 +171,7 @@ def treatdic(sumdic_file = "/home/macenrola/Desktop/sumdic_with_apolar"):
 		sumdic = cPickle.load(r)
 	with open(outfile, "wb") as w:
 		for i, k in enumerate(sorted(sumdic)[:]):
+			print i, k, sumdic[k]
 			# print k, sumdic[k]
 			# return
 			if i%1000==0: print "step {}".format(i)
@@ -285,7 +287,71 @@ def addSmi(basefile, pubsmi):
 				pbnbr = int(line.split('\t')[0])
 				w.write(line.strip()+'\t{}\n'.format(smidic[pbnbr]))
 
+def get_vina_affinities_report(listoffiles, fout='/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/RES_VINA_KNOWN_HOSTS'):
+	"""
+	:param listoffiles: takes in a list of files formatted as: /home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/pdbs/158-orig.pdbqt-LOG
+	:return: prints a file fout with the results formatted as number \tab affinity in kcal/mol
+	"""
+	with open(fout, 'wb') as w:
+		for f in listoffiles:
+			num = get_number_from_fname(f)
+			affinity = parse_vina_log(f)
+			w.write('{}\t{}\n'.format(num, affinity))
 
+
+def parse_vina_log(fname):
+	"""
+	:param fname: a vina log formatted as: /home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/pdbs/140-orig.pdbqt-LOG
+	:return: the affinity of the best pose from the report
+	"""
+	with open(fname, 'rb') as r:
+		for line in r:
+			print line[:4]
+			if line[:4]=='   1':
+				affinity = line.strip().split()[1]
+				return affinity
+	raise Exception('NO AFFINITY FOUND')
+
+def make_vina_bc_ourmethod(vina_report, bcfile, methodsummary, fout):
+	"""
+	:param vina_report: /home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/RES_VINA_KNOWN_HOSTS a vina report formatted '{}\t{}\n'.format(number, affinity)
+	:param bcfile:/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/res_host_with_BC.can formatted [CH-]1C=CC=C1	140	dES:91.54	dFF:-12.74	BC:6
+	:param methodsummary: /home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/sumdic_with_apolar_known_guests-processedfreeenergy 140	0	8	-24.761762	-3.450	 0.000	 0.010	 0.040	-3.450	-0.050	-21.312
+	:return: a merge of the three files including a conversion of bc to affinities
+	"""
+	import math
+	vinadic = {}
+	bcdic = {}
+	methoddic ={}
+
+	with open(vina_report, 'rb') as r:
+		for line in r:
+			num, affinity = line.strip().split()
+			vinadic[int(num)] = float(affinity)
+
+	with open(bcfile, 'rb') as r:
+		for line in r:
+			els = line.strip().split()
+			num = els[1]
+			smi = els[0]
+			print els[-1][3:]
+			bc = -float(els[-1][3:])/1000/4.18*8.3145*298.15*2.30258509299
+			bcdic[int(num)] = (bc, smi)
+
+	with open(methodsummary, 'rb') as r:
+		for line in r:
+			els = line.strip().split()
+			num = (els[0])
+			affinity = els[3]
+			methoddic[int(num)] = affinity
+
+	with open(fout, 'wb') as w:
+		w.write('{}\t{}\t{}\t{}\t{}\n'.format('number', 'smi', 'ref', 'vina', 'method'))
+		for k in sorted(bcdic.keys()):
+			print k
+			try:
+				w.write('{}\t{}\t{}\t{}\t{}\n'.format(k, bcdic[k][1], bcdic[k][0], vinadic[k], methoddic[k]))
+			except: print '{} posed problem'.format(k)
 # def remove_high_bad(basefile):
 # 	"""
 # 	:param basefile: takes in a file formatted as
@@ -328,8 +394,15 @@ if __name__ == "__main__":
 	# 			   '/home/macenrola/Documents/amberconvergedmols/allminus1stminus2nd')
 	# print parse_amber_report()
 	# make_summary_dic_of_numbers_and_poses(glob.glob("/home/macenrola/Documents/amberconvergedmols/all_pdbs_and_prmtops/*report"))
-	# print get_number_from_fname()
-	treatdic()
+	# # print get_number_from_fname()
+	# flist=glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/pdbs/*-orig.pdbqt-LOG')
+	# get_vina_affinities_report(flist)
+
+
+	make_vina_bc_ourmethod('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/RES_VINA_KNOWN_HOSTS',
+						   '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/res_host_with_BC.can',
+						   '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/sumdic_with_apolar_known_guests-processedfreeenergy',
+						   '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/all_together_report')
 	# generate_3d("/home/macenrola/Documents/docked_for_data_analysis/500krandomless25hvatoms")
 	# treatdic()
 	# number_lines('/home/macenrola/Documents/docked_for_data_analysis/400k-500klist_pdbqt')

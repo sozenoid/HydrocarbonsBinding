@@ -799,6 +799,10 @@ def get_charge_from_pdb_text(pdbfile):
 				accNeg +=1
 	return accPos-accNeg
 
+
+
+
+
 if __name__ == "__main__":
 	import glob
 	from subprocess import call
@@ -813,13 +817,24 @@ if __name__ == "__main__":
 	# print get_frequency_report('/home/macenrola/Desktop/391-orig_guestsPose1.pdb','/home/macenrola/Desktop/391-orig_guestsPose1.prmtop')
 	# print get_frequency_report('/home/macenrola/Desktop/391-orig_complexPose1.pdb',
 	# 					 '/home/macenrola/Desktop/391-orig_complexPose1.prmtop')
+	if False:
+		flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/259-orig_guestsPose*.pdb')
+		for f in flist:
+			fcomp = str.replace(f, 'guests', 'complex')
+			make_topology(f)
+			make_topology(f, '/home/macenrola/Documents/amberconvergedmols/CB_DATA/CB_candidate_formatted.pdb', fcomp)
 
-	# flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/*-orig_guestsPose*.pdb')
-	# for f in flist:
-	# 	fcomp = str.replace(f, 'guests', 'complex')
-	# 	make_topology(f)
-	# 	make_topology(f, '/home/macenrola/Documents/amberconvergedmols/CB_DATA/CB_candidate_formatted.pdb', fcomp)
-
+		flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/*-orig_*Pose*.pdb')
+		mkout = []
+		runout = []
+		with open('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/NABS_AND_FREQS', 'wb') as w:
+			for f in flist:
+				print f, f[:-4]+".prmtop"
+				cmd1,cmd2 = get_frequency_report(f, f[:-4]+".prmtop")
+				mkout.append(cmd1)
+				runout.append(cmd2)
+			w.write('\n'.join(mkout))
+			w.write('\n'.join(runout))
 
 
 
@@ -840,7 +855,7 @@ if __name__ == "__main__":
 	# 		with open(errfile, 'ab') as a:
 	# 			a.write(f+'\n')
 	# generate_PDBs_from_host_can_file('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/pdbs/res_host_with_BC.can')
-	generate_PDBs_from_host_can_file('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/pdbs/just259')
+	# generate_PDBs_from_host_can_file('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/pdbs/just259')
 	# with open('/home/macenrola/Documents/vasp/xylene/xyleneSmiles', 'rb') as r:
 	# 	for line in r:
 	# 		name, smi = line.strip().split('\t')
