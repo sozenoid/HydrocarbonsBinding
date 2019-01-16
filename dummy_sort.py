@@ -1627,12 +1627,99 @@ def find_untreated(flist):
 			with open('/home/macenrola/Desktop/unprocessed', 'ab') as a:
 				a.write('{}\n'.format(f))
 
+def write_sphere_radii_for_best_complexes(best_complexes_file, format_string_pdbfile='/home/macenrola/Documents/amberconvergedmols/all_pdbs_and_prmtops/{}*_OUT_GUEST*_complexPose{}.pdb'):
+	"""
+	:param best_complexes_file: a file formatted as follows
+		guest best pose; complex best pose; free energy difference; bad;      vdW;     elect;   nonpolar;   genBorn; entropy; guest number ; pubchem number
+		7	1	-39.5088353	-42.77	-0.06	-45.34	0.64	-1.38	3.37	3.261	G1	101803327
+		2	1	-39.0214055	-42.31	-0.04	-44.9	0.59	-1.34	3.38	3.289	G2	101803326
+		1	7	-38.77519885	-42.24	-0.05	-44.8	0.69	-1.34	3.27	3.465	G3	144631
+		4	2	-38.50895125	-50.83	2.28	-55.3	3.94	-1.99	0.25	12.321	G4	15196674
+	:param format_string_pdbfile: a file location such as /home/macenrola/Documents/amberconvergedmols/all_pdbs_and_prmtops/241xaa_OUT_GUEST158_complexPose0.pdb
+	:return: a copy of the initial file with the radii of the sphere that fits the smallest sphere where the best complex would fit
+	"""
+	from miniball_example_containers import doit
+	from mol_ops import get_atoms_coords
+	with open(best_complexes_file+'_WITH_RADII', 'wb') as w:
+		with open(best_complexes_file, 'rb') as r:
+			for i, line in enumerate(r):
+				try:
+					els = line.strip().split()
+					complex_num = els[1]
+					pubchem_num = els[11]
+					fname = format_string_pdbfile.format(pubchem_num, complex_num)
+					truefname = glob.glob(fname)[0]
+					mol = Chem.MolFromPDBFile(truefname, removeHs=False)
+					# res = align_mol(Chem.MolToMolBlock(mol))
+					# print res[-1]
+					atm_list, atm_coords = get_atoms_coords(Chem.MolToMolBlock(mol))
+					miniball_data = doit(atm_coords)
+					radius = miniball_data[-1]**.5
+					els.append(radius)
+					els.append(truefname)
+					w.write('{}\n'.format('\t'.join([str(x) for x in els])))
+				except:
+					print 'error at step {} at line {}'.format(i, line)
+
+def plot_distributions_for_endo_exo(fin='/home/macenrola/Documents/amberconvergedmols/datamanuscript/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi_nohighbad.txt_WITH_RADII', threshold=8.0):
+	"""
+	:param fin: gives a file formatted as by  write_sphere_radii_for_best_complexes with binding affinities and complex radii
+	:param threshold: the radius threshold to mark a complex as exo, above is exo
+	:return: prints a graph with the density of exo and endo according to the binding affinity
+	"""
+	from scipy.stats import binned_statistic
+	import numpy as np
+	from scipy.interpolate import interp1d
+
+	import matplotlib.pyplot as plt
+	affs_radii= []
+	with open(fin, 'rb') as r:
+		for line in r:
+			els = line.strip().split()
+			affs_radii.append((float(els[2]),float(els[12])))
+	endo = []
+	exo = []
+	for els in affs_radii:
+		if els[1]>threshold:
+			exo.append(els)
+		else:
+			endo.append(els)
+	print endo
+	print exo
+	bin_val_endo, bin_edges_endo, bin_d_endo = binned_statistic([x[0] for x in endo], [1 for x in endo], 'count', 15)
+	bin_width_endo = bin_edges_endo[1]-bin_edges_endo[0]
+	bin_centers_endo = bin_edges_endo[:-1]-bin_width_endo/2.0
+
+	bin_val_exo, bin_edges_exo, bin_d_exo =  binned_statistic([x[0] for x in exo], [1 for x in exo], 'count', 15)
+	bin_width_exo = bin_edges_exo[1]-bin_edges_exo[0]
+	bin_centers_exo = bin_edges_exo[:-1] - bin_width_exo / 2.0
+
+
+
+	plt.figure('Endo and Exo distribution')
+	fcub = interp1d(bin_centers_endo,bin_val_endo, kind="cubic")
+	xnew = np.linspace(bin_centers_endo.min(),bin_centers_endo.max(), 200)
+	plt.plot(bin_centers_endo,bin_val_endo, 'o', xnew, fcub(xnew), '-')
+
+	fcub = interp1d(bin_centers_exo,bin_val_exo, kind="cubic")
+	xnew = np.linspace(bin_centers_exo.min(),bin_centers_exo.max(), 200)
+	plt.plot(bin_centers_exo, bin_val_exo, 'x', xnew, fcub(xnew), '--')
+	plt.legend(['Endo points','Endo interpolation','Exo point','Exo interpolation'])
+	plt.ylabel('Count (#)')
+	plt.xlabel('Binding affinity (kcal/mol)')
+	plt.show()
+
+
+
+
 if __name__ == '__main__':       
 	import glob
+	plot_distributions_for_endo_exo()
+	# write_sphere_radii_for_best_complexes('/home/macenrola/Documents/amberconvergedmols/datamanuscript/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi_nohighbad.txt')
 	# test_charge_representation_in_pdb()
 	# test_read_invalid_obabel_mol()
-	flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/*sh')
-	find_untreated(flist)
+	# flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/*sh')
+	# find_untreated(flist)
 	# conditions = make_heat_map_input_from_expandedsumfile('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation_with_entropy_NODUPLICATE_reformatted_sortednottolargenotthreeringsnoallenesbelow200kcal_extendedphysicalfeatures')
 	# plot_heat_map_from_binary_file('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/ALL_SUMS_with_uncorrelated_conformers_NODUPLICATE_NOTROTATABLE_with_solvation_with_entropy_NODUPLICATE_reformatted_sortednottolargenotthreeringsnoallenesbelow200kcal_extendedphysicalfeatures_inputforheat', conditions)
 	# add_numbers_to_sumfile('/home/macenrola/Thesis/hydrocarbons/splitby1hydrocarbon-19/guest_of_interest/details-amber-solv-entropy')

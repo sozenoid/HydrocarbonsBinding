@@ -9,6 +9,7 @@ from subprocess import call
 from SmallestEnclosingCircle_CASTING import returnCircleAsTuple
 from miniball_example_containers import doit
 
+
 def get_atoms_coords(RDKIT_BLOCK):
 	"""Takes as input an RDKIT BLOCK and returns a list of atoms with a numpy array containing the coordinates"""
 	RDKIT_BLOCK = RDKIT_BLOCK.split('\n')
@@ -99,7 +100,7 @@ def align_mol(RDKIT_BLOCK):
 		miniball_data[-1] = miniball_data[-1]**.5
 		return miniball_data[-1]
 
-	print RDKIT_BLOCK
+	# print RDKIT_BLOCK
 	atom_coords = get_atoms_coords(RDKIT_BLOCK)
 	transformed_coords, xthick, ythick, zthick, rad = align_xyz(atom_coords[0], atom_coords[1])
 	sphere_radius = set_miniball_data(atom_coords[0], atom_coords[1])

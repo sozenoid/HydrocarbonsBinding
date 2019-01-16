@@ -150,7 +150,7 @@ def make_summary_dic_of_numbers_and_poses(listoffiles, indexofff=-3):
 			sumdic[number][type] = {}
 		sumdic[number][type][posenum] = (breakdown, total, vibrational)
 
-	with open("/home/macenrola/Desktop/sumdic_with_apolar_known_guests", "wb") as handle:
+	with open("/home/macenrola/Desktop/sumdic_with_apolar_known_guests_tweaked_params", "wb") as handle:
 		pk.dump(sumdic, handle)
 
 	# with open("/home/macenrola/Desktop/sumdic", "rb") as r:
@@ -393,7 +393,7 @@ if __name__ == "__main__":
 	# 			   '/home/macenrola/Documents/amberconvergedmols/2ndroundtar',
 	# 			   '/home/macenrola/Documents/amberconvergedmols/allminus1stminus2nd')
 	# print parse_amber_report()
-	# make_summary_dic_of_numbers_and_poses(glob.glob("/home/macenrola/Documents/amberconvergedmols/all_pdbs_and_prmtops/*report"))
+	# make_summary_dic_of_numbers_and_poses(glob.glob("/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs_tweak_parm/*.nab.out-freqreport"))
 	# # print get_number_from_fname()
 	# flist=glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/pdbs/*-orig.pdbqt-LOG')
 	# get_vina_affinities_report(flist)
@@ -401,10 +401,11 @@ if __name__ == "__main__":
 
 	make_vina_bc_ourmethod('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/RES_VINA_KNOWN_HOSTS',
 						   '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/res_host_with_BC.can',
-						   '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/sumdic_with_apolar_known_guests-processedfreeenergy',
-						   '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/all_together_report')
+						   '/home/macenrola/Desktop/sumdic_with_apolar_known_guests_tweaked_params-processedfreeenergy',
+						   '/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/results/all_together_report_tweakedParams')
+
 	# generate_3d("/home/macenrola/Documents/docked_for_data_analysis/500krandomless25hvatoms")
-	# treatdic()
+	# treatdic('/home/macenrola/Desktop/sumdic_with_apolar_known_guests_tweaked_params')
 	# number_lines('/home/macenrola/Documents/docked_for_data_analysis/400k-500klist_pdbqt')
 	# addSmi('/home/macenrola/Documents/docked_for_data_analysis/sumdic_with_apolar_breakdown-processedfreeenergy-sorted',
 		   # '/home/macenrola/Documents/docked_for_data_analysis/pubchem_smis')
