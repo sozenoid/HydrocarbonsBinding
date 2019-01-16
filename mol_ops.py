@@ -775,14 +775,23 @@ def generate_PDBs_from_host_can_file(canfile):
 	"""
 	path = '/'.join(canfile.split('/')[:-1])
 	print path
-	with open(canfile, 'rb') as r:
-		for line in r:
-			smi,nbr = line.strip().split()[:2]
-			mol = Chem.MolFromSmiles(smi)
-			mol = Chem.AddHs(mol)
-			AllChem.EmbedMolecule(mol)
-			AllChem.MMFFOptimizeMolecule(mol)
-			Chem.MolToPDBFile(mol, '{}/{}-orig.pdb'.format(path, nbr))
+	with open(canfile+'with_volume', 'wb') as w:
+		with open(canfile, 'rb') as r:
+			for i, line in enumerate(r):
+				if i%100==0: print 'step {}'.format(i)
+				try:
+					smi,nbr = line.strip().split()[:2]
+					mol = Chem.MolFromSmiles(smi)
+					if mol.GetNumAtoms()!=19:
+						continue
+					mol = Chem.AddHs(mol)
+					AllChem.EmbedMolecule(mol)
+					AllChem.MMFFOptimizeMolecule(mol)
+					vol = AllChem.ComputeMolVolume(mol)
+					# Chem.MolToPDBFile(mol, '{}/{}-orig.pdb'.format(path, nbr))
+					w.write(line.strip()+'\t{0:4.2f}\n'.format(vol))
+				except:
+					print 'error at line {}'.format(line)
 
 def get_charge_from_pdb_text(pdbfile):
 	"""
@@ -800,7 +809,23 @@ def get_charge_from_pdb_text(pdbfile):
 				accNeg +=1
 	return accPos-accNeg
 
-
+def get_distance_between_fragments(fin='/home/macenrola/Documents/amberconvergedmols/datamanuscript/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi_nohighbad.txt_WITH_RADII'):
+	"""
+	:param fin: takes in a fin file formatted as: 2	7	-16.4406655	-19.61	2.38	-23.3	-0.68	-1.31	3.31	3.169	G5419	91241798	8.24988948329	/home/macenrola/Documents/amberconvergedmols/all_pdbs_and_prmtops/91241798xzzdnsv_OUT_GUEST142_complexPose7.pdb
+	:return: A copy of the file with appended to each line the distance between the centroid of the two fragments
+	"""
+	with open(fin+'_with_centroid_diff', 'wb') as w:
+		with open(fin, 'rb') as r:
+			for i, line in enumerate(r):
+				els = line.strip().split()
+				fname = els[-1]
+				mol = Chem.MolFromPDBFile(fname, removeHs = False)
+				frags = Chem.GetMolFrags(mol, asMols=True)
+				f1 = list(Chem.rdMolTransforms.ComputeCentroid(frags[0].GetConformer()))
+				f2 = list(Chem.rdMolTransforms.ComputeCentroid(frags[1].GetConformer()))
+				dist2 = sum([(x[0]-x[1])**2 for x in zip(f1,f2)])
+				print i, fname, dist2
+				w.write(line.strip()+'\t{0:4.2f}\n'.format(dist2))
 
 
 
@@ -818,6 +843,7 @@ if __name__ == "__main__":
 	# print get_frequency_report('/home/macenrola/Desktop/391-orig_guestsPose1.pdb','/home/macenrola/Desktop/391-orig_guestsPose1.prmtop')
 	# print get_frequency_report('/home/macenrola/Desktop/391-orig_complexPose1.pdb',
 	# 					 '/home/macenrola/Desktop/391-orig_complexPose1.prmtop')
+	get_distance_between_fragments()
 	if False:
 		flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/259-orig_guestsPose*.pdb')
 		for f in flist:
@@ -836,6 +862,7 @@ if __name__ == "__main__":
 				runout.append(cmd2)
 			w.write('\n'.join(mkout))
 			w.write('\n'.join(runout))
+	# generate_PDBs_from_host_can_file('/home/macenrola/Documents/amberconvergedmols/Pubchem_C/pdbs/PUBCHEM_ONLY_C_only_19_atoms')
 
 
 
