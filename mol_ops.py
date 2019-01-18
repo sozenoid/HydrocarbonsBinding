@@ -827,7 +827,88 @@ def get_distance_between_fragments(fin='/home/macenrola/Documents/amberconverged
 				print i, fname, dist2
 				w.write(line.strip()+'\t{0:4.2f}\n'.format(dist2))
 
+def get_number_of_atoms_in_CB(cb_points, guest_points):
+	"""
+	:param rdkitmol: the atomic coordinates of the cb and guest
+	:return: the number of heavy atoms from the guest of the complex that fit within the CB host
+	"""
 
+	#### Check the number of points in the hull convex
+	from scipy.spatial import ConvexHull, Delaunay
+	if not isinstance(cb_points, Delaunay):
+		hull = Delaunay(cb_points)
+
+	np_in_cb = 0
+	for p in guest_points:
+		if hull.find_simplex(p) >= 0:
+			np_in_cb+=1
+	# print np_in_cb
+	return np_in_cb
+
+def get_CB_guest_points(rdkitmol):
+	"""
+	:param rdkitmol: takes in a rdkit_mol
+	:return: returns the atomic coordinates for the cb and the guest
+	"""
+	complex, guest = Chem.GetMolFrags(rdkitmol, asMols=True)
+	if complex.GetNumAtoms()<guest.GetNumAtoms():
+		complex, guest = guest, complex
+
+	#### Get poits for the the hull convex
+	hull_points = []
+	for at in complex.GetConformer().GetPositions():
+		hull_points.append(at)
+
+	#### Guest the guest points
+	guest_points = []
+	for at in guest.GetConformer().GetPositions():
+		guest_points.append(at)
+
+	return hull_points, guest_points
+
+
+def get_pca_mean_and_alignment(cb_points, guest_points):
+	"""
+	:param cb_points: takes in the points of the cb molecule as a list of list where the sublists are the cartesian coordinates
+	:param guest_points: takes in the points of the guests where the sublists are the cartesian coordinatse
+	:return: returns the pca mean value and the angle made by the CB "z" axis and the guest main axis in the PCA sense
+	"""
+	import numpy as np
+	from sklearn.decomposition import PCA
+
+	pca_cb = PCA(n_components=3)
+	pca_cb.fit(cb_points)
+	pca_guest = PCA(n_components=3)
+	pca_guest.fit(guest_points)
+	pca_cb_dir = pca_cb.components_[2]
+	cosangle = sum([x[0] * x[1] for x in zip(pca_cb_dir, pca_guest.components_[0])])
+	angle = (np.arccos(cosangle)*180/np.pi)
+
+	if np.abs(angle)>90:
+		angle = np.abs(angle-180)
+
+	distance2 = sum([(x[0]-x[1])**2 for x in zip(pca_guest.mean_, pca_cb.mean_)])
+	return distance2, angle
+
+def get_pca_and_atom_inside_feature(fin='/home/macenrola/Documents/amberconvergedmols/datamanuscript/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi_nohighbad.txt_WITH_RADII_with_centroid_diff'):
+	"""
+	:param fin: takes a file processed as  7	1	-39.5088353	-42.77	-0.06	-45.34	0.64	-1.38	3.37	3.261	G1	101803327	7.87789397075	/home/macenrola/Documents/amberconvergedmols/all_pdbs_and_prmtops/101803327xzzejhi_OUT_GUEST35_complexPose1.pdb	10.08
+	:return: a copy of the same file with in bonus the pca and atom inside of cb parameters
+	"""
+	with open(fin+'_pca_atominside', 'wb') as w:
+		with open(fin, 'rb') as r:
+			for i, line in enumerate(r):
+				els = line.strip().split()
+				fname = els[13]
+
+				try:
+					mol = Chem.MolFromPDBFile(fname, removeHs=True)
+					cb_points, guests_points = get_CB_guest_points(mol)
+					points_in_cb = get_number_of_atoms_in_CB(cb_points, guests_points)
+					distance2, angle = get_pca_mean_and_alignment(cb_points, guests_points)
+					# print zip(els, range(len(els)))
+					w.write(line.strip()+'\t{0}\t{1:.4f}\t{2:.4f}\n'.format(points_in_cb, distance2, angle))
+				except: print 'error step {} {}'.format(i, line)
 
 if __name__ == "__main__":
 	import glob
@@ -835,6 +916,9 @@ if __name__ == "__main__":
 	from multiprocessing import Pool, TimeoutError
 	import time
 	import os
+	# c = Chem.MolFromPDBFile('/home/macenrola/Desktop/101372457xzzefsy_OUT_GUEST89_complexPose5.pdb', removeHs=True)
+	# cb_points, guest_points = get_CB_guest_points(c)
+	# print get_pca_mean_and_alignment(cb_points, guest_points)
 	# print get_charge_from_pdb_text('/home/macenrola/Desktop/391-orig_guestsPose1.pdb')
 	# make_topology('/home/macenrola/Desktop/CB_candidate_formatted.pdb')
 	# make_topology('/home/macenrola/Desktop/391-orig_guestsPose1.pdb')
@@ -843,7 +927,8 @@ if __name__ == "__main__":
 	# print get_frequency_report('/home/macenrola/Desktop/391-orig_guestsPose1.pdb','/home/macenrola/Desktop/391-orig_guestsPose1.prmtop')
 	# print get_frequency_report('/home/macenrola/Desktop/391-orig_complexPose1.pdb',
 	# 					 '/home/macenrola/Desktop/391-orig_complexPose1.prmtop')
-	get_distance_between_fragments()
+	get_pca_and_atom_inside_feature()
+	# get_distance_between_fragments()
 	if False:
 		flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/259-orig_guestsPose*.pdb')
 		for f in flist:

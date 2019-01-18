@@ -1661,7 +1661,8 @@ def write_sphere_radii_for_best_complexes(best_complexes_file, format_string_pdb
 				except:
 					print 'error at step {} at line {}'.format(i, line)
 
-def plot_distributions_for_endo_exo(fin='/home/macenrola/Documents/amberconvergedmols/datamanuscript/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi_nohighbad.txt_WITH_RADII_with_centroid_diff', threshold=10.0):
+def plot_distributions_for_endo_exo(fin='/home/macenrola/Documents/amberconvergedmols/datamanuscript/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi_nohighbad.txt_WITH_RADII_with_centroid_diff_pca_atominside',
+									threshold=[16.0, 6, 45]):
 	"""
 	:param fin: gives a file formatted as by  write_sphere_radii_for_best_complexes with binding affinities and complex radii
 	:param threshold: the radius threshold to mark a complex as exo, above is exo
@@ -1672,18 +1673,23 @@ def plot_distributions_for_endo_exo(fin='/home/macenrola/Documents/amberconverge
 	from scipy.interpolate import interp1d
 
 	import matplotlib.pyplot as plt
-	affs_radii= []
+	crits = []
 	with open(fin, 'rb') as r:
 		for line in r:
 			els = line.strip().split()
-			affs_radii.append((float(els[2]),float(els[-1])))
+			# print zip(els, range(len(els)))
+			crits.append((float(els[2]),float(els[14]), int(els[15]), float(els[16]), float(els[17]), int(els[11])))
+			# print crits[-1]
 	endo = []
 	exo = []
-	for els in affs_radii:
-		if els[1]>threshold:
-			exo.append(els)
-		else:
+	# return
+	for els in crits:
+		valid =  [els[1]<threshold[0], els[2]>=threshold[1], els[4]<threshold[2]]
+		print els, valid
+		if all(valid):
 			endo.append(els)
+		else:
+			exo.append(els)
 
 	bin_val_endo, bin_edges_endo, bin_d_endo = binned_statistic([x[0] for x in endo], [1 for x in endo], 'count', 15)
 	bin_width_endo = bin_edges_endo[1]-bin_edges_endo[0]
@@ -1693,7 +1699,9 @@ def plot_distributions_for_endo_exo(fin='/home/macenrola/Documents/amberconverge
 	bin_width_exo = bin_edges_exo[1]-bin_edges_exo[0]
 	bin_centers_exo = bin_edges_exo[:-1] - bin_width_exo / 2.0
 
-
+	# print '{}\t{}\t{}\t{}'.format('cendo', 'vendo', 'cexo', 'vexo')
+	# for i in range(len(bin_centers_endo)):
+	# 	print '{}\t{}\t{}\t{}'.format(bin_centers_endo[i], bin_val_endo[i], bin_centers_exo[i], bin_val_exo[i])
 
 	plt.figure('Endo and Exo distribution')
 	fcub = interp1d(bin_centers_endo,bin_val_endo, kind="cubic")
@@ -1707,6 +1715,9 @@ def plot_distributions_for_endo_exo(fin='/home/macenrola/Documents/amberconverge
 	plt.ylabel('Count (#)')
 	plt.xlabel('Binding affinity (kcal/mol)')
 	plt.show()
+	print '{}\t{}\t{}\t{}'.format('cendo', 'vendo', 'cexo', 'vexo')
+	for i in range(len(bin_centers_endo)):
+		print '{0:.3f}\t{1:.3f}\t{2:.3f}\t{3:.3f}'.format(bin_centers_endo[i], bin_val_endo[i], bin_centers_exo[i], bin_val_exo[i])
 
 def plot_volume_distrib(fin='/home/macenrola/Documents/amberconvergedmols/Pubchem_C/pdbs/PUBCHEM_ONLY_C_only_19_atomswith_volume'):
 	"""
@@ -1725,7 +1736,7 @@ def plot_volume_distrib(fin='/home/macenrola/Documents/amberconvergedmols/Pubche
 			vols.append(float(els[-1]))
 
 	print vols
-	bin_val, bin_edges, bin_d = binned_statistic(vols, [1 for x in vols], 'count', 25)
+	bin_val, bin_edges, bin_d = binned_statistic(vols, [1 for x in vols], 'count', 15)
 	bin_width = bin_edges[1]-bin_edges[0]
 	bin_centers = bin_edges[:-1]-bin_width/2.0
 
@@ -1738,7 +1749,8 @@ def plot_volume_distrib(fin='/home/macenrola/Documents/amberconvergedmols/Pubche
 if __name__ == '__main__':       
 	import glob
 	plot_distributions_for_endo_exo()
-	# write_sphere_radii_for_best_compl
+
+
 	# exes('/home/macenrola/Documents/amberconvergedmols/datamanuscript/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi_nohighbad.txt')
 	# plot_volume_distrib()
 	# test_charge_representation_in_pdb()
