@@ -1662,7 +1662,7 @@ def write_sphere_radii_for_best_complexes(best_complexes_file, format_string_pdb
 					print 'error at step {} at line {}'.format(i, line)
 
 def plot_distributions_for_endo_exo(fin='/home/macenrola/Documents/amberconvergedmols/datamanuscript/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi_nohighbad.txt_WITH_RADII_with_centroid_diff_pca_atominside',
-									threshold=[16.0, 6, 45]):
+									threshold=[16.0, 6, 90]):
 	"""
 	:param fin: gives a file formatted as by  write_sphere_radii_for_best_complexes with binding affinities and complex radii
 	:param threshold: the radius threshold to mark a complex as exo, above is exo

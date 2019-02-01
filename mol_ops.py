@@ -866,6 +866,27 @@ def get_CB_guest_points(rdkitmol):
 
 	return hull_points, guest_points
 
+def get_CB_guest_atomxyz(rdkitmol):
+	"""
+	:param rdkitmol: takes in a rdkit_mol
+	:return: returns the atomic coordinates for the cb and the guest
+	"""
+	complex, guest = Chem.GetMolFrags(rdkitmol, asMols=True)
+	if complex.GetNumAtoms()<guest.GetNumAtoms():
+		complex, guest = guest, complex
+
+	#### Get poits for the the hull convex
+	hull_points = []
+	for at in complex.GetConformer().GetPositions():
+		hull_points.append(at)
+
+	#### Guest the guest points
+	guest_points = []
+	for at in guest.GetConformer().GetPositions():
+		guest_points.append(at)
+
+	return hull_points, guest_points
+
 
 def get_pca_mean_and_alignment(cb_points, guest_points):
 	"""
@@ -910,6 +931,13 @@ def get_pca_and_atom_inside_feature(fin='/home/macenrola/Documents/amberconverge
 					w.write(line.strip()+'\t{0}\t{1:.4f}\t{2:.4f}\n'.format(points_in_cb, distance2, angle))
 				except: print 'error step {} {}'.format(i, line)
 
+
+def make_nw_paramfile(inpdbfile):
+	"""
+	:param inpdbfile: Takes in a PDB file and will print the corresponding nwchem file for minimization
+	:return:
+	"""
+	cb_points, get_CB_guest_points()
 if __name__ == "__main__":
 	import glob
 	from subprocess import call
