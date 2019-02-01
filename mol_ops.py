@@ -877,13 +877,21 @@ def get_CB_guest_atomxyz(rdkitmol):
 
 	#### Get poits for the the hull convex
 	hull_points = []
-	for at in complex.GetConformer().GetPositions():
-		hull_points.append(at)
+	complexc = complex.GetConformer(-1)
+	for i in range(complexc.GetNumAtoms()):
+		cc = [complex.GetAtomWithIdx(i).GetSymbol()]
+		cc.extend(list(complexc.GetAtomPosition(i)))
+		hull_points.append(cc)
+		# print cc
 
 	#### Guest the guest points
 	guest_points = []
-	for at in guest.GetConformer().GetPositions():
-		guest_points.append(at)
+	guestc = guest.GetConformer(-1)
+	for i in range(guestc.GetNumAtoms()):
+		cc = [guest.GetAtomWithIdx(i).GetSymbol()]
+		cc.extend(list(guestc.GetAtomPosition(i)))
+		guest_points.append(cc)
+		# print cc
 
 	return hull_points, guest_points
 
@@ -932,18 +940,16 @@ def get_pca_and_atom_inside_feature(fin='/home/macenrola/Documents/amberconverge
 				except: print 'error step {} {}'.format(i, line)
 
 
-def make_nw_paramfile(inpdbfile):
-	"""
-	:param inpdbfile: Takes in a PDB file and will print the corresponding nwchem file for minimization
-	:return:
-	"""
-	cb_points, get_CB_guest_points()
+
 if __name__ == "__main__":
 	import glob
 	from subprocess import call
 	from multiprocessing import Pool, TimeoutError
 	import time
 	import os
+	import rdkit
+	from rdkit import Chem
+	from rdkit.Chem import AllChem
 	# c = Chem.MolFromPDBFile('/home/macenrola/Desktop/101372457xzzefsy_OUT_GUEST89_complexPose5.pdb', removeHs=True)
 	# cb_points, guest_points = get_CB_guest_points(c)
 	# print get_pca_mean_and_alignment(cb_points, guest_points)
@@ -955,8 +961,10 @@ if __name__ == "__main__":
 	# print get_frequency_report('/home/macenrola/Desktop/391-orig_guestsPose1.pdb','/home/macenrola/Desktop/391-orig_guestsPose1.prmtop')
 	# print get_frequency_report('/home/macenrola/Desktop/391-orig_complexPose1.pdb',
 	# 					 '/home/macenrola/Desktop/391-orig_complexPose1.prmtop')
-	get_pca_and_atom_inside_feature()
+	# get_pca_and_atom_inside_feature()
 	# get_distance_between_fragments()
+
+	make_nw_paramfile('/home/macenrola/Documents/nwchem/xylene_complexes/charged/7237xbu_OUT_GUEST139_complexPose0.pdb')
 	if False:
 		flist = glob.glob('/home/macenrola/Documents/amberconvergedmols/VinaVsOurMethodVsExp/prmtops_freqs/259-orig_guestsPose*.pdb')
 		for f in flist:
