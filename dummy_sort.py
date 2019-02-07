@@ -1746,10 +1746,31 @@ def plot_volume_distrib(fin='/home/macenrola/Documents/amberconvergedmols/Pubche
 	plt.plot(bin_centers,bin_val, 'o', xnew, fcub(xnew), '-')
 	plt.show()
 
+
+def copy_files_for_first_mols(fin='/home/macenrola/Documents/amberconvergedmols/datamanuscript/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi_nohighbad.txt_WITH_RADII_with_centroid_diff_pca_atominside'):
+	"""
+	:param fin: a file that contain the number of best guests and complexes 
+	:return: will copy the files of the best guests and complexes to another file
+	"""
+	with open(fin, 'rb') as r:
+		for i,line in enumerate(r):
+			if i ==50:
+				break
+			gnum, cnum = line.split()[:2]
+			pbnum = line.split()[11]
+			rank = line.split()[10]
+			cfile = line.split()[13]
+			gfile = cfile[:-16]+'guestsPose{}.pdb'.format(gnum)
+			guest = Chem.MolFromPDBFile(gfile, removeHs=False)
+			complex = Chem.MolFromPDBFile(cfile, removeHs=False)
+			print guest, complex
+			Chem.MolToMolFile(guest, '/home/macenrola/Documents/amberconvergedmols/top50/RANK_{}_PBNUM_{}_GUEST.sdf'.format(rank, pbnum))
+			Chem.MolToMolFile(complex, '/home/macenrola/Documents/amberconvergedmols/top50/RANK_{}_PBNUM_{}_COMPLEX.sdf'.format(rank, pbnum))
 if __name__ == '__main__':       
 	import glob
-	plot_distributions_for_endo_exo()
+	# plot_distributions_for_endo_exo()
 
+	copy_files_for_first_mols()
 
 	# exes('/home/macenrola/Documents/amberconvergedmols/datamanuscript/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi_nohighbad.txt')
 	# plot_volume_distrib()
