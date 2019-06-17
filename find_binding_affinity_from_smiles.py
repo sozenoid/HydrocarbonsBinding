@@ -248,14 +248,14 @@ def format_gaussian_input_from_xyz(xyz_file):
 	# route="#N PM6D3 opt=(ReadOptimize)"
 	# route="#N PM6D3 opt=(ts, noeigentest, modredundant, calcfc, maxcyc=999) freq=noraman"
 	checkpoint="%Chk={}.chk".format(name)
-	mem="%mem=180gb"
-	procs="%NProcShared=36"
+	mem="%mem=120gb"
+	procs="%NProcShared=24"
 	# route="#N PM6D3 freq=noraman"
 	if 'diradical' in f or 'N2' in f:
 		charge_mult="1 3"
 		print "{} is diradical or n2".format(f)
 	else:
-		charge_mult = "1 1"
+		charge_mult = "2 1"
 	if 'TS' in f:
 		route="#n wB97XD/6-31G(d) opt=(ts, noeigentest, modredundant, calcfc, maxcyc=999) maxdisk=100GB freq"
 	else:
@@ -296,7 +296,7 @@ if __name__ =="__main__":
 	else:
 		flist=sys.argv[1:]
 
-	flist=glob.glob('/home/macenrola/Documents/DBOA/DBOA_TO_DOCK/results-ts-frozen-dih/pm6-well-converged/samples/*TS*.xyz')
+	flist=glob.glob('/home/macenrola/Documents/DBOA/doubly-charged/base_pdbs/*_docked.xyz')
 	for f in flist:
 		# print
 		format_gaussian_input_from_xyz(f)
