@@ -277,6 +277,29 @@ def format_gaussian_input_from_xyz(xyz_file):
 		w.write(freeze+"\n")
 		w.write("\n")
 
+def convert_smiles_to_sdf(smifile):
+	"""
+	PRE   : Takes in a smiles file
+	POST  : Returns a sdf file with all the said molecules
+	"""
+	w = Chem.SDWriter(smifile[:-4]+".sdf")
+	with open(smifile, "rb") as r:
+		for line in r:
+			smile = line.strip().split()[0]
+			name = line.strip().split()[1:]
+			smile = smile.split('.')[0]
+			print smile, name 
+			try:
+				mol = Chem.MolFromSmiles(smile)
+				mol = Chem.AddHs(mol)
+				AllChem.EmbedMolecule(mol)
+				AllChem.MMFFOptimizeMolecule(mol)
+				mol.SetProp("_Name", "-".join(name))
+				w.write(mol)
+			except:
+				print "NOT TREATING {}".format(name)
+	w.close()
+
 
 
 if __name__ =="__main__":
@@ -289,19 +312,47 @@ if __name__ =="__main__":
 	import sys
 	import glob
 
-	if len(sys.argv)==1:
-		flist=[]
-	elif len(sys.argv)==2:
-		flist=[sys.argv[1]]
-	else:
-		flist=sys.argv[1:]
-
-	flist=glob.glob('/home/macenrola/Documents/DBOA/doubly-charged/base_pdbs/*_docked.xyz')
-	for f in flist:
-		# print
-		format_gaussian_input_from_xyz(f)
-		# align_xyz_from_file_to_file(f)
-
+	mol=Chem.MolFromMolBlock(get_CB_BLOCK(), removeHs=False )
+	Chem.MolToPDBFile(mol, "/home/macenrola/Documents/MACHINE_LEARNING/ledock/CB7_pure.pdb")
+# =============================================================================
+# 	convert_smiles_to_sdf("/home/macenrola/Documents/MACHINE_LEARNING/ledock/todock_jiaqi.can")
+# =============================================================================
+# =============================================================================
+# 	if len(sys.argv)==1:
+# 		flist=[]
+# 	elif len(sys.argv)==2:
+# 		flist=[sys.argv[1]]
+# 	else:
+# 		flist=sys.argv[1:]
+# 
+# # =============================================================================
+# # 	flist=glob.glob('/home/macenrola/Documents/DBOA/doubly-charged/base_pdbs/*_docked.xyz')
+# # =============================================================================
+# 	for f in flist:
+# 		# print
+# 		format_gaussian_input_from_xyz(f)
+# 		# align_xyz_from_file_to_file(f)
+# =============================================================================
+########## HS COMPENSATION
+#	with open("/home/macenrola/Documents/H-S-compensation/C19_sample_200.can", "rb") as r:
+#		for i, line in enumerate(r):
+#			smi, pb = line.strip().split()
+#			try:				
+#				print i, pb
+#				mol = Chem.MolFromSmiles(smi)
+#				mol = Chem.AddHs(mol)
+#				AllChem.EmbedMolecule(mol)
+#				converge_molecule(mol)
+#				comp = dock_molecule(mol, True)
+#				wm = Chem.SDWriter('/home/macenrola/Documents/H-S-compensation/sdfs/{}-mol.sdf'.format(pb))
+#				wc = Chem.SDWriter('/home/macenrola/Documents/H-S-compensation/sdfs/{}-comp.sdf'.format(pb))
+#				wm.write(mol)
+#				wc.write(comp)
+#				wm.close()
+#				wc.close()
+#			except:
+#				print "Number {} failed".format(pb)
+############## HS COMPENSATION
 	# cb=Chem.MolFromMolBlock(get_CB_BLOCK(), removeHs=False)
 	# Chem.MolToMolFile(cb, "/home/macenrola/Documents/DBOA/DBOA_TO_DOCK/CB7.sdf")
 	# with open('/home/macenrola/Documents/DBOA/DBOA_TO_DOCK/CB7.xyz', 'rb') as r:

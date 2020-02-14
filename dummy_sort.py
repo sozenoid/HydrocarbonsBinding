@@ -1187,7 +1187,7 @@ def add_entropy_to_sumlist(SUMlist, location_of_sdf='/home/macenrola/Thesis/hydr
 def reformat_after_solvation_entropy(SUMFILE):
 	"""
 	PRE : Takes in a sum file that has gone through solvation and energy appending
-	POST : Returns another SUM file with the total energy and removes the irreleavant individual contributions
+	POST : Returns another SUM file with the total energy and removes the irreleavant individual FRtions
 	"""
 	SUMout = SUMFILE + '_reformatted'
 	with open(SUMFILE, 'rb') as r:
@@ -1352,14 +1352,17 @@ def split_molecule_into_fragments(fname):
 		mol = Chem.MolFromMolFile(fname, removeHs=False)
 	elif fname[-4:] == 'mol2':
 		mol = Chem.MolFromMol2File(fname, removeHs=False)
+	elif fname[-4:] == '.pdb':
+		mol = Chem.MolFromPDBFile(fname, removeHs=False)
 
 	frags = Chem.GetMolFrags(mol, asMols=True)
+	frags = sorted(frags, key = lambda x: len(x.GetAtoms()))
 	print frags
 	for i, m in enumerate(frags):
 		print i
 		if  fname[-4:] == '.sdf':
 			Chem.MolToMolFile(m, fname+'-frag{}'.format(i))
-		elif  fname[-4:] == 'mol2':
+		elif  fname[-4:] == 'mol2' or  fname[-4:] == '.pdb':
 			AllChem.ComputeGasteigerCharges(m)
 			Chem.MolToPDBFile(m, fname+'-frag{}.pdb'.format(i))
 
@@ -1770,8 +1773,11 @@ if __name__ == '__main__':
 	import glob
 	# plot_distributions_for_endo_exo()
 
-	copy_files_for_first_mols()
-
+# =============================================================================
+# 	copy_files_for_first_mols()
+# =============================================================================
+	for f in glob.glob("/home/macenrola/Documents/CB8-electrochemistry/BASE_XYZ/*.pdb"):
+		split_molecule_into_fragments(f)
 	# exes('/home/macenrola/Documents/amberconvergedmols/datamanuscript/sumdic_with_apolar_breakdown-processedfreeenergy-sorted_with_smi_nohighbad.txt')
 	# plot_volume_distrib()
 	# test_charge_representation_in_pdb()
