@@ -311,9 +311,45 @@ if __name__ =="__main__":
 	from sklearn.decomposition import PCA
 	import sys
 	import glob
-
-	mol=Chem.MolFromMolBlock(get_CB_BLOCK(), removeHs=False )
-	Chem.MolToPDBFile(mol, "/home/macenrola/Documents/MACHINE_LEARNING/ledock/CB7_pure.pdb")
+	summaryfile = "/home/macenrola/Desktop/MACHINE_LEARNING/ledock/right-names/summary_file"
+	with open(summaryfile, 'wb'): pass
+	results = []
+	for f in sorted(glob.glob("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/todock_jiaqi*.mol2")):
+		# GETS THE NAME
+		with open(f, 'rb') as r:
+			name = r.readlines()[1].strip()
+			name = name.replace('/','\\')
+			print name, f
+		# GETS THE DOCFILE
+		dokfile = f.replace("mol2", "dok")
+		# ERASE OLD AND SPLITS IN INDIVIDUAL PDB FILES
+		for f in glob.glob("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/right-names/{}-{}.pdb".format(name,"*")):
+			with open(f, 'wb') as w: pass
+		
+		i=0
+		with open(dokfile, 'rb') as r:
+			for line in r:
+				with open("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/right-names/{}-{}.pdb".format(name, i), "ab") as a:
+					a.write(line)
+				if "END" in line:
+					i=i+1
+				elif "Cluster" in line:
+					with open(summaryfile, 'ab') as a:
+						#a.write('{}\t{}\t{}'.format(name, i, line))
+						results.append((float(line.split()[-2]), name, i))
+		# CREATES THE COMPLEXES
+		cb = Chem.MolFromPDBFile("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/CB7_pure_het.pdb", removeHs=False)
+		for f in sorted(glob.glob("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/right-names/{}-{}.pdb".format(name, "*"))):
+			print f
+			try:
+				guest = Chem.MolFromPDBFile(f, removeHs=False)
+				cbguest = Chem.CombineMols(cb, guest)
+				Chem.MolToPDBFile(cbguest, f.replace(name, name+'@CB'))
+			except:
+				pass
+	with open(summaryfile, 'ab') as a:
+		for res in sorted(results):
+			a.write("{}\t{}\t{} kcal/mol\n".format(res[1], res[2], res[0]))
 # =============================================================================
 # 	convert_smiles_to_sdf("/home/macenrola/Documents/MACHINE_LEARNING/ledock/todock_jiaqi.can")
 # =============================================================================
