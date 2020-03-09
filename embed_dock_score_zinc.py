@@ -94,8 +94,44 @@ def associate_a_dok_w_pdb(receptor_pdb, dokfile):
 		
 		print(Chem.MolToMolBlock(comp))
 		Chem.MolToMolFile(comp, dokfile+"LOL{}.sdf".format(j))
-	
+
+def reformat_output(fname):
+	"""
+	PRE:takes a file
+	POST: and slices it
+	"""
+	sumfile = fname+"_PP"
+	with open(sumfile, "w") as w:
+		with open(fname, "rb") as r:
+			lines = r.readlines()
+			for l in range(len(lines)):
+				if "dok" in lines[l].decode():
+					n=lines[l+1]
+					if "Cluster" in n.decode():
+						w.write("{}\t{}\n".format(lines[l].decode().strip(), n.decode().strip().split()[-2]))
 		
+
+def make_the_final_res_list(recap_file, result_file):
+	"""
+	PRE: Takes the mol nums and docking results and the association between nums and smiles
+	POST: Buils a summary file that hopefully is useable by chemvae
+	"""
+	new_data_file = recap_file+"_QED_IS_DOK_EMPTY_CB"
+	the250k_recap = pickle.load(open(recap_file, "rb" ))
+	print(the250k_recap[:10])
+	summary = {}
+	with open(result_file, "r") as r:
+		for line in r:
+			num, res = line.split()
+			num = str(num.replace(".sdf.dok", "").replace("./", ""))
+			summary[num] = res
+	with open(new_data_file, "w") as w:
+		for i, els in enumerate(the250k_recap):
+			if i==0: w.write(','.join(els[:-1])+"\n")
+			if els[-1] not in summary: continue
+			els[2] = summary[els[-1]]
+			w.write(','.join(els[:-1])+"\n")
+
 if __name__ == "__main__":
 	import csv
 	import rdkit
@@ -104,5 +140,6 @@ if __name__ == "__main__":
 	import multiprocessing
 	import pickle
 	import tempfile
-
-	associate_a_dok_w_pdb("/home/macenrola/Desktop/MACHINE_LEARNING/Zinc_Dock/CB7_pure_het.pdb", "/home/macenrola/Desktop/MACHINE_LEARNING/Zinc_Dock/0026211.sdf.dok")
+	make_the_final_res_list( "/home/macenrola/Desktop/MACHINE_LEARNING/Zinc_Dock/recap_list_250k", "/home/macenrola/Desktop/MACHINE_LEARNING/zinc_post_process/SUMMARY_EMPTY_CB7_RESULTS_PP")
+	# associate_a_dok_w_pdb("/home/macenrola/Desktop/MACHINE_LEARNING/Zinc_Dock/CB7_pure_het.pdb", "/home/macenrola/Desktop/MACHINE_LEARNING/zinc_post_process/0045226.sdf.dok")
+	# reformat_output("/home/macenrola/Desktop/MACHINE_LEARNING/zinc_post_process/SUMMARY_EMPTY_CB7_RESULTS")
