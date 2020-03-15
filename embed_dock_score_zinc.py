@@ -54,5 +54,6 @@ if __name__ == "__main__":
 	import rdkit
 	from rdkit import Chem
 	from rdkit.Chem import AllChem
+	ledock_path = "/home/macenrola/HydrocarbonsBinding/zinc_pieces/ledock_linux_x86"
 	#split_main_file_in_block_of_1000("/home/macenrola/HydrocarbonsBinding/250k_rndm_zinc_drugs_clean_3.csv")
 	process_a_batch("/home/macenrola/HydrocarbonsBinding/zinc_pieces/1000-2000-zinc-pieces")
