@@ -300,36 +300,32 @@ def convert_smiles_to_sdf(smifile):
 				print "NOT TREATING {}".format(name)
 	w.close()
 
-
-
-if __name__ =="__main__":
-	import rdkit
-	from rdkit import Chem
-	from rdkit.Chem import AllChem, Draw
-	import numpy as np
-	import scipy
-	from sklearn.decomposition import PCA
-	import sys
-	import glob
-	summaryfile = "/home/macenrola/Desktop/MACHINE_LEARNING/ledock/right-names/summary_file"
+def reassemble_the_doks():
+	"""
+	PRE: TAKES in a list of mol2 with associated dok files
+	POST: Will produce the complexes that correspond to the docking 
+	"""
+	cdir = "/home/macenrola/Documents/Thesis/ChemTS/RES_FROM_MYRIAD"
+	summaryfile = "{}/summary_file".format(cdir)
 	with open(summaryfile, 'wb'): pass
 	results = []
-	for f in sorted(glob.glob("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/todock_jiaqi*.mol2")):
+	for f in sorted(glob.glob("{}/*.mol2".format(cdir))):
 		# GETS THE NAME
-		with open(f, 'rb') as r:
-			name = r.readlines()[1].strip()
-			name = name.replace('/','\\')
-			print name, f
+		name = f.split("/")[-1]
+		#with open(f, 'rb') as r:
+			#name = r.readlines()[1].strip()
+			#name = name.replace('/','\\')
+			#print name, f
 		# GETS THE DOCFILE
 		dokfile = f.replace("mol2", "dok")
 		# ERASE OLD AND SPLITS IN INDIVIDUAL PDB FILES
-		for f in glob.glob("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/right-names/{}-{}.pdb".format(name,"*")):
+		for f in glob.glob("{}/{}-{}.pdb".format(cdir, name,"*")):
 			with open(f, 'wb') as w: pass
 		
 		i=0
 		with open(dokfile, 'rb') as r:
 			for line in r:
-				with open("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/right-names/{}-{}.pdb".format(name, i), "ab") as a:
+				with open("{}/{}-{}.pdb".format(cdir, name, i), "ab") as a:
 					a.write(line)
 				if "END" in line:
 					i=i+1
@@ -338,8 +334,8 @@ if __name__ =="__main__":
 						#a.write('{}\t{}\t{}'.format(name, i, line))
 						results.append((float(line.split()[-2]), name, i))
 		# CREATES THE COMPLEXES
-		cb = Chem.MolFromPDBFile("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/CB7_pure_het.pdb", removeHs=False)
-		for f in sorted(glob.glob("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/right-names/{}-{}.pdb".format(name, "*"))):
+		cb = Chem.MolFromPDBFile("{}/G38_het.pdb".format(cdir), removeHs=False)
+		for f in sorted(glob.glob("{}/{}-{}.pdb".format(cdir, name, "*"))):
 			print f
 			try:
 				guest = Chem.MolFromPDBFile(f, removeHs=False)
@@ -350,6 +346,57 @@ if __name__ =="__main__":
 	with open(summaryfile, 'ab') as a:
 		for res in sorted(results):
 			a.write("{}\t{}\t{} kcal/mol\n".format(res[1], res[2], res[0]))
+if __name__ =="__main__":
+	import rdkit
+	from rdkit import Chem
+	from rdkit.Chem import AllChem, Draw
+	import numpy as np
+	import scipy
+	from sklearn.decomposition import PCA
+	import sys
+	import glob
+	reassemble_the_doks()
+# =============================================================================
+# 	summaryfile = "/home/macenrola/Desktop/MACHINE_LEARNING/ledock/right-names/summary_file"
+# 	with open(summaryfile, 'wb'): pass
+# 	results = []
+# 	for f in sorted(glob.glob("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/todock_jiaqi*.mol2")):
+# 		# GETS THE NAME
+# 		with open(f, 'rb') as r:
+# 			name = r.readlines()[1].strip()
+# 			name = name.replace('/','\\')
+# 			print name, f
+# 		# GETS THE DOCFILE
+# 		dokfile = f.replace("mol2", "dok")
+# 		# ERASE OLD AND SPLITS IN INDIVIDUAL PDB FILES
+# 		for f in glob.glob("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/right-names/{}-{}.pdb".format(name,"*")):
+# 			with open(f, 'wb') as w: pass
+# 		
+# 		i=0
+# 		with open(dokfile, 'rb') as r:
+# 			for line in r:
+# 				with open("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/right-names/{}-{}.pdb".format(name, i), "ab") as a:
+# 					a.write(line)
+# 				if "END" in line:
+# 					i=i+1
+# 				elif "Cluster" in line:
+# 					with open(summaryfile, 'ab') as a:
+# 						#a.write('{}\t{}\t{}'.format(name, i, line))
+# 						results.append((float(line.split()[-2]), name, i))
+# 		# CREATES THE COMPLEXES
+# 		cb = Chem.MolFromPDBFile("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/CB7_pure_het.pdb", removeHs=False)
+# 		for f in sorted(glob.glob("/home/macenrola/Desktop/MACHINE_LEARNING/ledock/right-names/{}-{}.pdb".format(name, "*"))):
+# 			print f
+# 			try:
+# 				guest = Chem.MolFromPDBFile(f, removeHs=False)
+# 				cbguest = Chem.CombineMols(cb, guest)
+# 				Chem.MolToPDBFile(cbguest, f.replace(name, name+'@CB'))
+# 			except:
+# 				pass
+# 	with open(summaryfile, 'ab') as a:
+# 		for res in sorted(results):
+# 			a.write("{}\t{}\t{} kcal/mol\n".format(res[1], res[2], res[0]))
+# =============================================================================
 # =============================================================================
 # 	convert_smiles_to_sdf("/home/macenrola/Documents/MACHINE_LEARNING/ledock/todock_jiaqi.can")
 # =============================================================================
